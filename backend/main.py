@@ -38,12 +38,15 @@ class PromptRequest(BaseModel):
     theme: str
     variant_folder: str
     ui_color: str = "蓝色科技感"
+    reference_file: str = ""
 
 class PromptResponse(BaseModel):
     role: str
     goal: str
     function_output: str
     ui_requirements: str
+    fixed_content: str
+    theme_type: str
     raw_gpt_output: str
     timestamp: str
 
@@ -77,7 +80,8 @@ async def generate_prompt(request: PromptRequest):
             theme=request.theme,
             app_name=request.app_name,
             variant_folder=request.variant_folder,
-            ui_color=request.ui_color
+            ui_color=request.ui_color,
+            reference_file=request.reference_file
         )
         logger.info(f"GPT 生成完成，输出长度: {len(gpt_output)} 字符")
         
@@ -87,7 +91,9 @@ async def generate_prompt(request: PromptRequest):
             gpt_output=gpt_output,
             app_name=request.app_name,
             variant_folder=request.variant_folder,
-            ui_color=request.ui_color
+            ui_color=request.ui_color,
+            theme=request.theme,
+            reference_file=request.reference_file
         )
         logger.info("模板格式化完成")
         
@@ -96,6 +102,8 @@ async def generate_prompt(request: PromptRequest):
             goal=template_result["goal"],
             function_output=template_result["function_output"],
             ui_requirements=template_result["ui_requirements"],
+            fixed_content=template_result["fixed_content"],
+            theme_type=template_result["theme_type"],
             raw_gpt_output=gpt_output,
             timestamp=datetime.now().isoformat()
         )

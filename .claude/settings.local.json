@@ -24,7 +24,9 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(git rm:*)",
-      "Bash(git filter-branch:*)"
+      "Bash(git filter-branch:*)",
+      "Bash(set BACKEND_PORT=8001)",
+      "Bash(del test_reference_file_feature.py test_api_reference_file.py)"
     ],
     "deny": []
   }

@@ -3,6 +3,7 @@ export interface PromptRequest {
   theme: string;
   variant_folder: string;
   ui_color: string;
+  reference_file?: string;
 }
 
 export interface PromptResponse {
@@ -10,6 +11,8 @@ export interface PromptResponse {
   goal: string;
   function_output: string;
   ui_requirements: string;
+  fixed_content: string;
+  theme_type: string;
   raw_gpt_output: string;
   timestamp: string;
 }
@@ -19,4 +22,6 @@ export interface BaseContent {
   goal: string;
   function_output: string;
   ui_requirements: string;
+  fixed_content: string;
+  theme_type: string;
 }

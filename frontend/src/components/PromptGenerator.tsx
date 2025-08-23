@@ -13,40 +13,52 @@ interface ThemeOption {
 
 const BUILT_IN_THEMES: ThemeOption[] = [
   {
-    id: 'cleaner_creative',
-    name: '清理（创意）',
-    description: '创意清理体验，不需要真实的清理功能，通过动画和游戏化展示清理效果',
-    icon: '🧹'
+    id: 'wifi_creative_checkin',
+    name: 'WiFi创意签到',
+    description: '无需WiFi实际功能、创意、结合签到功能',
+    icon: '🌟'
   },
   {
-    id: 'traffic_creative',
-    name: '流量（创意）',
-    description: '流量星球馆，不需要真实的流量功能，通过虚拟数据展示创意流量管理界面',
-    icon: '🌐'
-  },
-  {
-    id: 'traffic_real',
-    name: '流量（真实）',
-    description: '流量监控管家，需要获取真实的流量数据，提供实时流量统计和使用分析功能',
-    icon: '📊'
-  },
-  {
-    id: 'wifi_creative',
-    name: 'WiFi（创意）',
-    description: '创意WiFi管理体验，不需要真实的WiFi功能，通过可视化展示虚拟网络连接状态',
-    icon: '📶'
-  },
-  {
-    id: 'wifi_real',
-    name: 'WiFi（真实）',
-    description: 'WiFi智能助手，需要真实的WiFi功能，提供网络扫描、连接管理和信号优化建议',
+    id: 'wifi_real_scanning',
+    name: 'WiFi真实扫描',
+    description: '需要有WiFi实际功能、创意、不需要有签到功能',
     icon: '📡'
   },
   {
-    id: 'steps_real',
-    name: '步数（真实）',
-    description: '智能步数追踪器，需要真实的获取步数功能，提供运动统计、健康分析和目标设定',
-    icon: '👟'
+    id: 'clean_creative_ball',
+    name: '清理创意球',
+    description: '清理、不需要真实的清理功能、创意',
+    icon: '🧹'
+  },
+  {
+    id: 'clean_creative_dream',
+    name: '清理梦境室',
+    description: '清理、不需要真实的清理功能、创意',
+    icon: '🌙'
+  },
+  {
+    id: 'magnify_emotion',
+    name: '放大情绪镜',
+    description: '放大、无放大功能、创意',
+    icon: '🔍'
+  },
+  {
+    id: 'magnify_memory',
+    name: '放大回忆器',
+    description: '放大、无放大功能、创意',
+    icon: '💭'
+  },
+  {
+    id: 'traffic_real_monitor',
+    name: '流量真实监控',
+    description: '流量、需要真实流量数据、创意可视化',
+    icon: '📊'
+  },
+  {
+    id: 'traffic_creative_planet',
+    name: '流量星球馆',
+    description: '流量、不需要真实流量功能、创意星球主题',
+    icon: '🌌'
   }
 ]
 
@@ -55,7 +67,8 @@ const PromptGenerator: React.FC = () => {
     app_name: '',
     theme: '',
     variant_folder: '',
-    ui_color: '蓝色科技感'
+    ui_color: '蓝色科技感',
+    reference_file: ''
   })
 
   const [response, setResponse] = useState<PromptResponse | null>(null)
@@ -189,6 +202,23 @@ const PromptGenerator: React.FC = () => {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              参考文件 <span className="text-gray-500 text-xs">(可选)</span>
+            </label>
+            <input
+              type="text"
+              name="reference_file"
+              value={formData.reference_file || ''}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="例如：HomeFragment（自动添加@前缀和.kt后缀）"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              输入文件名（如"HomeFragment"），系统会自动格式化为"@HomeFragment.kt"
+            </p>
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}
@@ -234,13 +264,26 @@ const PromptGenerator: React.FC = () => {
             </div>
           </div>
 
+          {/* 主题类型显示 */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h4 className="text-sm font-medium text-blue-800 mb-2">检测到的主题类型</h4>
+            <p className="text-blue-700 text-sm">
+              <span className="font-semibold">{response.theme_type}</span> 
+              {response.theme_type !== 'default' && (
+                <span className="ml-2 text-xs bg-blue-100 px-2 py-1 rounded">已应用专用技术要求</span>
+              )}
+            </p>
+          </div>
+
           {/* 固定内容拼接组件 */}
           <FixedContentAppender 
             baseContent={{
               role: response.role,
               goal: response.goal,
               function_output: response.function_output,
-              ui_requirements: response.ui_requirements
+              ui_requirements: response.ui_requirements,
+              fixed_content: response.fixed_content,
+              theme_type: response.theme_type
             }}
           />
         </div>

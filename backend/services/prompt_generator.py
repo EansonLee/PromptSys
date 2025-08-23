@@ -10,6 +10,117 @@ class PromptGenerator:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
+        # 主题特定的固定内容映射
+        self.theme_fixed_content = {
+            'wifi': {
+                'keywords': ['wifi', 'WiFi', 'WIFI', '网络', '信号', '热点', '连接'],
+                'content': """
+### 5. 数据采集逻辑：
+- 使用 @/module-wifi 中的工具类，参考 中获取WiFi列表的方式来获取周围网络列表
+如需要跳转Dialog参考 
+- 参考 @/module-wifi  中的工具类获取WiFi、信号等信息;
+- 图表使用MpChart，参考 @FreeRankFragment.kt@free_fragment_rank.xml 中图表、流量获取的用法;
+- 参考 @/module_fake 中使用数据库的方法进行数据库存储，在本变体中进行编写数据库文件即可
+
+6. 权限说明：
+参考 @/variant 中其他变体以及 @PermissionComplianceManager.kt 中的申请权限的方法修改;
+当前变体，同一个权限使用同一个key
+
+- 参考 @FreeRankFragment.kt 中申请应用使用权限的方法;
+7. 参考 @SpeedFragment.kt 中Fragment的可见性逻辑，对 进行修改，不需要马上进行扫描，只有进入Fragment点击按钮，给了权限后才进行扫描;
+8. 新建的 Fragment逻辑也跟第 7.一样;
+9. 参考 @BabyAppAdapter.kt 新建"RecycleView"的"Adapter";
+10. 参考 @BabyChangeDialog.kt 新建Dialog;
+11. 参考 @BabyFlowChangeActivity.kt 新建Activity;
+12. 参考 @StatisticsFragment.kt 中流量的获取、使用方法;
+13. 都要真实数据，WiFi无信号，没WiFi、WiFi不可用，没信号直接展示无数据即可，不要生成、展示模拟数据
+14. 不执行任务编译、测试、命令
+15. 不需要生成readMe文档"""
+            },
+            'clean': {
+                'keywords': ['清理', '清洁', '净化', '清除', '整理', '优化'],
+                'content': """
+### 权限说明：
+- 不需敏感系统权限，所有数据来源于应用本地题库记录  
+所有数据仅存于本地数据库（Room）
+
+---
+
+- 参考 @variant\\variant_clean190626\\src\\main\\java\\com\\variant\\notification\\ 中的数据库实现与写法
+- 参考 @AppUsageSettingActivity.kt 中使用"KeyValueUtils"进行持久化存储
+- 如需要跳转Dialog 参考 @LinkPermissionDialog.kt 
+- 如需跳转 Activity 参考 @AppUsageSettingActivity.kt 
+- 参考 @variant_clean190616/ 中数据库的实现与写法
+不需要执测试命令进行测试
+
+##任务执行完，最后打印**任务已经执行完成**"""
+            },
+            'big': {
+                'keywords': ['大字版', '放大', '大字', '老年', '视力', '字体'],
+                'content': """
+### 5. 数据采集逻辑：
+
+如需要跳转Dialog参考 @variant\\variant_big131091\\src\\main\\java\\com\\dodg\\diverg\\ChaoqingTipDialog.kt 
+
+
+6. 权限说明：
+参考 @/variant  中其他变体以及 @base\\src\\main\\java\\com\\ljh\\major\\base\\utils\\PermissionComplianceManager.kt 中的申请权限的方法修改;
+当前变体，同一个权限使用同一个key
+
+7. 参考 @variant_big131125 中数据库的使用方式，数据库存放在变体下即可
+8. 参考 @variant\\variant_big131125\\src\\main\\java\\com\\big\\adapter\\NoteEventAdapter.kt 编写RecycleView 的 Adapter
+9. 不需要执测试命令进行测试
+##任务执行完，最后打印**任务已经执行完成**"""
+            },
+            'traffic': {
+                'keywords': ['流量', '数据', '网络', '上网', '消耗'],
+                'content': """
+### 5. 数据采集逻辑：
+- 使用 @/module-wifi 中的工具类，参考 中获取WiFi列表的方式来获取周围网络列表
+如需要跳转Dialog参考 
+- 参考 @/module-wifi  中的工具类获取WiFi、信号等信息;
+- 图表使用MpChart，参考 @FreeRankFragment.kt@free_fragment_rank.xml 中图表、流量获取的用法;
+- 参考 @/module_fake 中使用数据库的方法进行数据库存储，在本变体中进行编写数据库文件即可
+
+6. 权限说明：
+参考 @/variant 中其他变体以及 @PermissionComplianceManager.kt 中的申请权限的方法修改;
+当前变体，同一个权限使用同一个key
+
+- 参考 @FreeRankFragment.kt 中申请应用使用权限的方法;
+7. 参考 @SpeedFragment.kt 中Fragment的可见性逻辑，对 进行修改，不需要马上进行扫描，只有进入Fragment点击按钮，给了权限后才进行扫描;
+8. 新建的 Fragment逻辑也跟第 7.一样;
+9. 参考 @BabyAppAdapter.kt 新建"RecycleView"的"Adapter";
+10. 参考 @BabyChangeDialog.kt 新建Dialog;
+11. 参考 @BabyFlowChangeActivity.kt 新建Activity;
+12. 参考 @StatisticsFragment.kt 中流量的获取、使用方法;
+13. 都要真实数据，WiFi无信号，没WiFi、WiFi不可用，没信号直接展示无数据即可，不要生成、展示模拟数据
+14. 不执行任务编译、测试、命令
+15. 不需要生成readMe文档"""
+            }
+        }
+        
+        # 默认固定内容（向后兼容）
+        self.default_fixed_content = """
+### 5. 数据采集逻辑：
+- 使用 @/module-wifi 中的工具类，参考 中获取WiFi列表的方式来获取周围网络列表
+如需要跳转Dialog参考 
+- 参考 @/module-wifi  中的工具类获取WiFi、信号等信息;
+- 图表使用MpChart，参考 @FreeRankFragment.kt@free_fragment_rank.xml 中图表、流量获取的用法;
+- 参考 @/module_fake 中使用数据库的方法进行数据库存储，在本变体中进行编写数据库文件即可
+
+6. 权限说明：
+参考 @/variant 中其他变体以及 @PermissionComplianceManager.kt 中的申请权限的方法修改;
+当前变体，同一个权限使用同一个key
+
+- 参考 @FreeRankFragment.kt 中申请应用使用权限的方法;
+7. 参考 @SpeedFragment.kt 中Fragment的可见性逻辑，对 进行修改，不需要马上进行扫描，只有进入Fragment点击按钮，给了权限后才进行扫描;
+8. 新建的 Fragment逻辑也跟第 7.一样;
+9. 参考 @BabyAppAdapter.kt 新建"RecycleView"的"Adapter";
+10. 参考 @BabyChangeDialog.kt 新建Dialog;
+11. 参考 @BabyFlowChangeActivity.kt 新建Activity;
+12. 参考 @StatisticsFragment.kt 中流量的获取、使用方法;
+13. 都要真实数据，WiFi无信号，没WiFi、WiFi不可用，没信号直接展示无数据即可，不要生成、展示模拟数据"""
+        
         # 配置详细日志
         logging.getLogger("httpx").setLevel(logging.DEBUG)
         logging.getLogger("openai").setLevel(logging.DEBUG)
@@ -57,84 +168,137 @@ class PromptGenerator:
         
         self.logger.info("提示词生成器初始化完成")
         
-    async def generate(self, theme: str, app_name: str, variant_folder: str, ui_color: str = "蓝色科技感") -> str:
+    def _format_reference_file(self, reference_file: str) -> str:
+        """格式化参考文件名，添加@前缀和.kt后缀"""
+        if not reference_file or not reference_file.strip():
+            return "@TrafficJourneyFragment.kt"
+        
+        reference_file = reference_file.strip()
+        # 移除已存在的@前缀和.kt后缀
+        if reference_file.startswith("@"):
+            reference_file = reference_file[1:]
+        if reference_file.endswith(".kt"):
+            reference_file = reference_file[:-3]
+        
+        return f"@{reference_file}.kt"
+    
+    def _detect_theme_type(self, theme: str) -> str:
+        """根据主题内容检测主题类型，返回相应的固定内容"""
+        theme_lower = theme.lower()
+        
+        # 检查每个主题类型的关键词
+        for theme_type, config in self.theme_fixed_content.items():
+            for keyword in config['keywords']:
+                if keyword.lower() in theme_lower:
+                    self.logger.info(f"检测到主题类型: {theme_type}，关键词: {keyword}")
+                    return theme_type
+        
+        self.logger.info("未检测到特定主题类型，使用默认固定内容")
+        return 'default'
+    
+    def _get_fixed_content(self, theme: str) -> str:
+        """根据主题获取相应的固定内容"""
+        theme_type = self._detect_theme_type(theme)
+        
+        if theme_type in self.theme_fixed_content:
+            return self.theme_fixed_content[theme_type]['content']
+        else:
+            return self.default_fixed_content
+
+    async def generate(self, theme: str, app_name: str, variant_folder: str, ui_color: str = "蓝色科技感", reference_file: str = "") -> str:
         """调用 GPT 生成提示词内容"""
         self.logger.info(f"开始生成提示词 - 主题: {theme[:30]}..., APP: {app_name}")
         
+        # 格式化参考文件
+        formatted_reference_file = self._format_reference_file(reference_file)
+        self.logger.info(f"格式化参考文件: '{reference_file}' -> '{formatted_reference_file}'")
+        
         system_prompt = """你是一位极具创意的 Android 开发工程师和提示词专家，擅长设计创新性、趣味性的移动应用功能。
-根据用户输入的主题，生成一个充满创意和想象力的、带有两个创新小功能的 Fragment Prompt。
+根据用户输入的主题，生成一个充满创意和想象力的、带有两个创新小功能的 Fragment 设计文档。
 
-重要：输出必须是干净的JSON格式，不包含任何控制字符或特殊字符。
+【重要】：你只需要输出创意功能设计部分，不要包含任何技术实现细节、权限说明、数据库使用方法等内容。
 
-角色格式要求：
-- 必须包含"Android 工具类 App 的创意开发工程师"
-- 格式："你是一位 Android 工具类 App 的创意开发工程师，目标是在[APP名称]中新增一个名为[Fragment名称]的 Fragment，[创意描述]。"
+输出格式要求：
+```
+角色：你是一位 Android 工具类 App 的创意开发工程师，目标是在「[APP名称]」中新增一个名为"[Fragment名称]"的 Fragment，[创意描述和功能概述]。
 
-目标格式要求：
-- 必须以"参考 @TrafficJourneyFragment.kt 在 @{variant_folder}/ 变体下，"开头
-- 然后跟随创意的目标描述
+目标：
+参考 {reference_file} 在 @{variant_folder}/ 变体下，构建一个以"[主题关键词]"为创意主题的 Fragment 页面，包含 2 个小功能模块：[模块1名称] + [模块2名称]，[数据处理方式说明]。
+
+功能输出：
+### 🔹 模块 1：[模块名称]（[功能类型]）
+- [详细的用户交互描述和创意亮点]  
+- [数据来源的概念描述，不涉及具体技术实现]  
+- [视觉效果和动画的创意描述]  
+- [用户体验和反馈机制描述]  
+- [创意亮点和特色功能描述]  
+
+**示例展示：**  
+📅 [具体的使用场景，包含日期时间]  
+✨ 动画：[详细的动画效果描述]  
+🌌 [界面展示：具体的UI布局和内容展示]  
+
+---
+
+### 🔹 模块 2：[模块名称]（[功能类型]）
+- [详细的用户交互描述和创意亮点]  
+- [数据存储和检索的概念描述，不涉及具体技术实现]  
+- [界面展示和布局设计描述]  
+- [与模块1的联动或差异化描述]  
+- [长期使用价值和用户粘性描述]  
+
+**示例展示：**  
+📚 [数据展示格式，包含具体示例]：  
+- [示例数据条目1]  
+- [示例数据条目2]  
+- [示例数据条目3]  
+
+📌 点击"[某个元素]" → [详细的交互反馈描述]  
+
+UI 要求：
+- 背景主色调：[具体颜色] {ui_color}，[风格描述]  
+- [UI元素1]：[具体的颜色值] (#[色值1] / #[色值2])  
+- 动画：[动画类型]、[效果描述]、[实现方式]  
+- [界面布局]：[详细的布局描述和交互方式]  
+- 所有控件使用原生 Android 控件，不使用 Material Design
+```
 
 创意要求：
-1. 功能设计必须严格围绕用户输入的主题进行，确保高度契合主题内容
-2. 每个功能模块都要有独特的创意亮点和交互方式
-3. 融入游戏化、社交化或个性化等创意元素
-4. 使用生动有趣的比喻和场景描述
-5. 输出必须严格遵循指定的JSON格式
-6. 功能模块必须基于真实数据但以创意方式呈现
-7. 包含详细的创意实现逻辑和UI要求
-8. 功能输出要包含具体的示例展示
-9. 仔细分析用户主题，确保功能模块与主题完全匹配
-10. 不得省略或新增无关内容
-
-**详细输出要求（重要）：**
-- description字段必须包含3-5个详细的功能点，每个用"• "开头
-- 每个功能点必须具体描述实现逻辑、数据来源、交互方式
-- example字段必须包含具体数值、时间、百分比等真实数据示例
-- 适当使用emoji表情符号增加趣味性
-- UI要求必须包含具体的颜色代码、尺寸、动画效果描述
-- 描述要生动形象，使用比喻和场景化语言
-
-输出格式（严格按此格式）：
-{
-  "role": "你是一位 Android 工具类 App 的创意开发工程师，目标是在[APP名称]中新增一个名为[Fragment名称]的 Fragment，[创意描述]。",
-  "goal": "参考 @TrafficJourneyFragment.kt 在 @{variant_folder}/ 变体下，构建一个以[主题]为主题的创意型 Fragment 页面，包含 2 个基于真实数据的小功能模块，并将数据本地存储以支持长期回顾。",
-  "function_module_1": {
-    "title": "### 功能模块1：[模块名称]（真实数据生成）",
-    "description": "• [功能点1：具体实现逻辑，包含数据来源和处理方式]\\n• [功能点2：交互方式和用户体验设计]\\n• [功能点3：数据存储和展示逻辑]\\n• [功能点4：创意亮点和特色功能]\\n• [功能点5：游戏化或社交化元素（可选）]",
-    "example": "示例展示：\\n📊 [具体数据示例，包含数值、时间、百分比等]\\n🎯 [展示格式说明，包含具体的界面布局描述]\\n⚡ [交互效果描述，包含动画和反馈效果]"
-  },
-  "function_module_2": {
-    "title": "### 功能模块2：[模块名称]", 
-    "description": "• [功能点1：具体实现逻辑，包含数据来源和处理方式]\\n• [功能点2：交互方式和用户体验设计]\\n• [功能点3：数据存储和展示逻辑]\\n• [功能点4：创意亮点和特色功能]\\n• [功能点5：与模块1的联动或差异化设计]",
-    "example": "示例展示：\\n📈 [具体数据示例，包含数值、时间、百分比等]\\n🎨 [展示格式说明，包含具体的界面布局描述]\\n✨ [交互效果描述，包含动画和反馈效果]"
-  },
-  "ui_requirements": "- 主色调{ui_color}，主要颜色值#[具体色值]\\n- 卡片圆角半径8dp，阴影elevation 4dp\\n- 按钮高度48dp，文字大小16sp\\n- 列表项间距12dp，内边距16dp\\n- 加载动画时长300ms，使用缓入缓出效果\\n- 数据刷新使用下拉刷新，支持触觉反馈\\n- 图表使用渐变色填充，支持点击交互\\n- 空状态页面包含插画和引导文案"
-}"""
+1. 专注于创意功能设计，不涉及技术实现细节
+2. 功能设计必须严格围绕用户输入的主题进行
+3. 必须包含完整的两个功能模块，每个都有独特创意
+4. 融入游戏化、可视化或个性化等创意元素
+5. 使用生动有趣的比喻和场景描述
+6. 包含详细的数据示例和交互反馈
+7. UI描述要具体，包含颜色、动画效果
+8. 避免提及具体的Android技术实现、权限申请、数据库使用等内容"""
 
         user_prompt = f"""主题：{theme}
 APP名称：{app_name}
 变体文件夹：{variant_folder}
 UI主色调：{ui_color}
+参考文件：{formatted_reference_file}
 
-请生成一个干净的JSON格式的Fragment提示词。重要要求：
-1. 输出必须是纯正的JSON，不包含任何控制字符或特殊符号
-2. 严格按照角色和目标格式要求
-3. 功能设计必须严格围绕主题"{theme}"进行，确保两个功能模块都与这个主题高度相关
-4. 仔细分析主题关键词，确保功能创意完全符合主题需求
-5. 融入趣味性、游戏化或社交化元素
-6. 使用生动的比喻和场景化描述
-7. 每个功能都要有创新的交互方式和视觉效果
+【重要】请严格按照以下结构输出，每个部分必须包含内容：
 
-**详细格式要求（重要）：**
-- description必须包含3-5个功能点，每个用"• "开头，用\\n分隔
-- 每个功能点必须详细描述实现逻辑、数据来源、交互方式
-- example必须包含具体的数值、时间、百分比等真实数据
-- 适当使用emoji表情符号（📊📈🎯🎨⚡✨等）增加趣味性
-- UI要求必须包含具体的颜色代码、尺寸（dp/sp）、动画时长（ms）
-- 描述要生动形象，使用比喻和场景化语言
-- 示例展示格式：示例展示：\\n📊 [数据]\\n🎯 [布局]\\n⚡ [交互]
+角色：[在这里写角色描述]
 
-请直接返回JSON，不要添加任何其他文字。"""
+目标：[在这里写目标描述]
+
+功能输出：
+[在这里写两个模块的详细功能描述]
+
+UI要求：
+[在这里写UI设计要求]
+
+【关键要求】：
+1. 必须包含上述四个部分，每部分都要有实际内容
+2. 功能设计必须严格围绕主题"{theme}"进行
+3. 只描述创意功能和用户体验，不涉及技术实现
+4. 融入游戏化、可视化等创意元素
+5. 每个模块都要包含具体的示例展示
+
+请确保严格按照格式输出，不要遗漏任何部分。"""
 
         messages = [
             SystemMessage(content=system_prompt),
@@ -195,118 +359,257 @@ UI主色调：{ui_color}
                 self.logger.error(f"错误详情: {str(e)}")
                 raise e
     
-    def format_template(self, gpt_output: str, app_name: str, variant_folder: str, ui_color: str = "蓝色科技感") -> dict:
-        """将GPT输出格式化为模板结构"""
-        self.logger.info("开始解析GPT输出并格式化为模板")
+    def format_template(self, gpt_output: str, app_name: str, variant_folder: str, ui_color: str = "蓝色科技感", theme: str = "", reference_file: str = "") -> dict:
+        """将GPT输出格式化为模板结构（现在是narrative格式，不再是JSON）"""
+        self.logger.info("开始解析GPT的narrative格式输出并格式化为模板")
+        
         try:
-            # 清理JSON字符串，移除控制字符
-            self.logger.info("清理GPT输出中的控制字符")
+            # 清理输出中的控制字符
             cleaned_output = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', gpt_output)
             
-            # 解析JSON输出
-            self.logger.info("尝试解析JSON格式的GPT输出")
-            gpt_data = json.loads(cleaned_output)
-            self.logger.info("JSON解析成功")
+            # 添加调试日志，输出GPT的原始返回内容
+            self.logger.info(f"GPT原始输出内容预览: {cleaned_output[:500]}...")
+            self.logger.info(f"GPT输出是否包含'角色：': {'角色：' in cleaned_output}")
+            self.logger.info(f"GPT输出是否包含'目标：': {'目标：' in cleaned_output}")
+            self.logger.info(f"GPT输出是否包含'功能输出：': {'功能输出：' in cleaned_output}")
+            self.logger.info(f"GPT输出是否包含'UI要求：': {'UI要求：' in cleaned_output or 'UI 要求：' in cleaned_output}")
             
-            # 构建功能输出
-            function_output = f"""{gpt_data['function_module_1']['title']}
-
-{gpt_data['function_module_1']['description']}
-
-{gpt_data['function_module_1']['example']}
-
-{gpt_data['function_module_2']['title']}
-
-{gpt_data['function_module_2']['description']}
-
-{gpt_data['function_module_2']['example']}"""
-
-            # 添加固定内容
-            fixed_content = """
-
-### 5. 数据采集逻辑：
-- 使用 @/module-wifi 中的工具类，参考 中获取WiFi列表的方式来获取周围网络列表
-如需要跳转Dialog参考 
-- 参考 @/module-wifi  中的工具类获取WiFi、信号等信息;
-- 图表使用MpChart，参考 @FreeRankFragment.kt@free_fragment_rank.xml 中图表、流量获取的用法;
-- 参考 @/module_fake 中使用数据库的方法进行数据库存储，在本变体中进行编写数据库文件即可
-
-6. 权限说明：
-参考 @/variant 中其他变体以及 @PermissionComplianceManager.kt 中的申请权限的方法修改;
-当前变体，同一个权限使用同一个key
-
-- 参考 @FreeRankFragment.kt 中申请应用使用权限的方法;
-7. 参考 @SpeedFragment.kt 中Fragment的可见性逻辑，对 进行修改，不需要马上进行扫描，只有进入Fragment点击按钮，给了权限后才进行扫描;
-8. 新建的 Fragment逻辑也跟第 7.一样;
-9. 参考 @BabyAppAdapter.kt 新建"RecycleView"的"Adapter";
-10. 参考 @BabyChangeDialog.kt 新建Dialog;
-11. 参考 @BabyFlowChangeActivity.kt 新建Activity;
-12. 参考 @StatisticsFragment.kt 中流量的获取、使用方法;
-13. 都要真实数据，WiFi无信号，没WiFi、WiFi不可用，没信号直接展示无数据即可，不要生成、展示模拟数据"""
-
-            # 格式化UI要求，确保每个要求都在单独的行
-            ui_requirements = gpt_data["ui_requirements"].replace("{ui_color}", ui_color)
-            # 如果UI要求没有换行符，尝试按句号或短横线分割并添加换行
-            if "\\n" not in ui_requirements and "\n" not in ui_requirements:
-                # 按句号或短横线分割UI要求
-                ui_parts = []
-                if "- " in ui_requirements:
-                    ui_parts = ui_requirements.split("- ")
-                    ui_requirements = "\\n".join([f"- {part.strip()}" for part in ui_parts if part.strip()])
-                elif "。" in ui_requirements:
-                    ui_parts = ui_requirements.split("。")
-                    ui_requirements = "\\n".join([f"- {part.strip()}。" for part in ui_parts if part.strip()])
+            # 使用更宽松的正则表达式解析narrative格式的内容
+            # 匹配角色（从"角色："开始到"目标："之前，允许各种空白字符）
+            role_match = re.search(r'角色：\s*(.*?)(?=目标：)', cleaned_output, re.DOTALL)
+            
+            # 匹配目标（从"目标："开始到"功能输出："之前）
+            goal_match = re.search(r'目标：\s*(.*?)(?=功能输出：)', cleaned_output, re.DOTALL)
+            
+            # 提取功能模块内容（从"功能输出："开始到"UI要求："之前，允许有无空格）
+            function_content_match = re.search(r'功能输出：\s*(.*?)(?=UI\s*要求：)', cleaned_output, re.DOTALL)
+            
+            # 提取UI要求（从"UI要求："开始，到固定内容之前）
+            ui_match = re.search(r'UI\s*要求：\s*(.*?)(?=\n\s*###|权限说明：|数据采集逻辑：|$)', cleaned_output, re.DOTALL)
+            
+            # 构建结果
+            role = role_match.group(1).strip() if role_match else ""
+            goal = goal_match.group(1).strip() if goal_match else ""
+            function_output = function_content_match.group(1).strip() if function_content_match else ""
+            ui_requirements = ui_match.group(1).strip() if ui_match else ""
+            
+            # 清理目标内容中可能包含的功能输出内容
+            if goal and '功能输出：' in goal:
+                goal = re.sub(r'功能输出：.*$', '', goal, flags=re.DOTALL).strip()
+                self.logger.warning("从目标内容中移除了功能输出部分")
+            
+            # 清理目标内容中可能包含的模块描述
+            if goal and '### 🔹 模块' in goal:
+                goal = re.sub(r'### 🔹 模块.*$', '', goal, flags=re.DOTALL).strip()
+                self.logger.warning("从目标内容中移除了模块描述部分")
+            
+            # 格式化功能输出，确保正确的分行格式
+            if function_output:
+                # 移除重复的功能输出内容（避免重复显示）
+                function_lines = function_output.split('\n')
+                seen_lines = []
+                for line in function_lines:
+                    stripped_line = line.strip()
+                    # 如果是重复的模块标题或内容，跳过
+                    if stripped_line and not any(seen == stripped_line for seen in seen_lines[-5:]):
+                        seen_lines.append(stripped_line)
+                function_output = '\n'.join(seen_lines)
+                
+                # 确保模块内容从第一个模块开始
+                first_module = re.search(r'###?\s*🔹?\s*模块', function_output)
+                if first_module:
+                    function_output = function_output[first_module.start():]
+                
+                # 确保每个"- "开头的要点分行显示
+                function_output = re.sub(r'([^\n])\s*-\s+([^-])', r'\1\n- \2', function_output)
+                
+                # 确保模块标题前有适当换行
+                function_output = re.sub(r'([^\n])(###?\s*🔹?\s*模块)', r'\1\n\n\2', function_output)
+                
+                # 确保模块之间的"---"前后有换行
+                function_output = re.sub(r'([^\n])(\s*---\s*)([^\n])', r'\1\n\n\2\n\n\3', function_output)
+                
+                # 确保"**示例展示：**"后面的内容换行
+                function_output = re.sub(r'(\*\*示例展示：\*\*)\s*([^\n])', r'\1\n\2', function_output)
+                
+                # 确保emoji后面的内容换行
+                function_output = re.sub(r'(📅|✨|🌌|📚|📌)\s*([^\n])', r'\1 \2\n', function_output)
+                
+                # 移除末尾可能的UI要求内容
+                function_output = re.sub(r'\n\s*UI\s*要求：.*$', '', function_output, flags=re.DOTALL)
+                
+                # 清理开头多余的换行和分隔符
+                function_output = re.sub(r'^[\s\n\-]+', '', function_output.strip())
+                
+                # 清理多余的连续换行符，但保留必要的双换行
+                function_output = re.sub(r'\n\n\n+', '\n\n', function_output.strip())
+            
+            # 格式化UI要求并替换{ui_color}占位符
+            if ui_requirements:
+                # 替换{ui_color}占位符
+                ui_requirements = ui_requirements.replace('{ui_color}', ui_color)
+                # 确保每个"- "开头的项目分行
+                ui_requirements = re.sub(r'(\s*)- ([^-])', r'\n\1- \2', ui_requirements)
+                # 清理多余的换行符
+                ui_requirements = re.sub(r'\n\n+', '\n\n', ui_requirements.strip())
+            
+            # 检查是否出现了内容耦合问题，如果function_output包含了角色、目标或UI要求
+            if function_output and ('角色：' in function_output or '目标：' in function_output or 'UI 要求：' in function_output):
+                self.logger.warning("检测到function_output中包含其他字段内容，进行内容清理...")
+                
+                # 如果function_output中包含角色，无论role字段是否为空都要从function_output中移除
+                if '角色：' in function_output:
+                    role_in_func = re.search(r'角色：(.*?)(?=目标：|---)', function_output, re.DOTALL)
+                    if role_in_func:
+                        if not role:  # 只有当role字段为空时才提取
+                            role = role_in_func.group(1).strip()
+                        function_output = function_output.replace(role_in_func.group(0), '').strip()
+                
+                # 如果function_output中包含目标，无论goal字段是否为空都要从function_output中移除
+                if '目标：' in function_output:
+                    goal_in_func = re.search(r'目标：(.*?)(?=---|###)', function_output, re.DOTALL)
+                    if goal_in_func:
+                        if not goal:  # 只有当goal字段为空时才提取
+                            goal = goal_in_func.group(1).strip()
+                        function_output = function_output.replace(goal_in_func.group(0), '').strip()
+                
+                # 如果function_output中包含UI要求，无论ui_requirements字段是否为空都要从function_output中移除
+                if 'UI 要求：' in function_output:
+                    ui_in_func = re.search(r'###?\s*UI\s*要求：(.*?)(?=###?\s*[\d\.]|权限说明：|$)', function_output, re.DOTALL)
+                    if ui_in_func:
+                        if not ui_requirements:  # 只有当ui_requirements字段为空时才提取
+                            ui_requirements = ui_in_func.group(1).strip()
+                        function_output = function_output.replace(ui_in_func.group(0), '').strip()
+                
+                # 清理function_output开头的多余分隔符和空白
+                function_output = re.sub(r'^[\s\-\n]+', '', function_output).strip()
+                
+                # 如果清理后function_output只剩下分隔符和空白，确保从第一个模块开始
+                if re.match(r'^[\s\-]*$', function_output):
+                    function_output = ""
+                
+            # 如果任一字段解析失败，尝试增强解析
+            if not role or not function_output:
+                self.logger.warning("主要解析失败，尝试增强解析逻辑...")
+                
+                # 尝试更宽松的角色匹配
+                if not role:
+                    role_patterns = [
+                        r'角色：\s*(.*?)(?=目标：|功能输出：|UI)',
+                        r'你是一位.*?工程师.*?(?=目标：|功能输出：|\n)',
+                        r'角色：\s*(.*?)(?=\n\n|\n目标)',
+                    ]
+                    for pattern in role_patterns:
+                        role_match = re.search(pattern, cleaned_output, re.DOTALL)
+                        if role_match:
+                            role = role_match.group(1).strip()
+                            self.logger.info(f"通过增强模式匹配到角色: {role[:50]}...")
+                            break
+                
+                # 尝试更宽松的功能输出匹配
+                if not function_output:
+                    function_patterns = [
+                        r'功能输出：\s*(.*?)(?=UI|### |\n\n### |\n权限|$)',
+                        r'### 🔹.*?模块.*?(?=UI|权限|$)',
+                        r'模块.*?：.*?(?=UI|权限|$)',
+                    ]
+                    for pattern in function_patterns:
+                        function_match = re.search(pattern, cleaned_output, re.DOTALL)
+                        if function_match:
+                            function_output = function_match.group(0 if '模块' in pattern else 1).strip()
+                            self.logger.info(f"通过增强模式匹配到功能输出: {function_output[:50]}...")
+                            break
+            
+            # 特殊处理：如果内容全部耦合在一起，尝试分离
+            elif not role and not goal and not function_output and not ui_requirements:
+                self.logger.warning("所有内容可能耦合在一起，尝试分离...")
+                
+                # 尝试从整个输出中分离角色
+                role_pattern = re.search(r'角色：(.*?)(?=目标：)', cleaned_output, re.DOTALL)
+                if role_pattern:
+                    role = role_pattern.group(1).strip()
+                
+                # 尝试分离目标
+                goal_pattern = re.search(r'目标：(.*?)(?=---)', cleaned_output, re.DOTALL)  
+                if goal_pattern:
+                    goal = goal_pattern.group(1).strip()
+                
+                # 尝试分离功能模块部分（从"功能输出："到"UI要求："之间的内容）
+                function_pattern = re.search(r'功能输出：(.*?)(?=UI\s*要求：)', cleaned_output, re.DOTALL)
+                if function_pattern:
+                    function_output = function_pattern.group(1).strip()
+                    
+                # 尝试分离UI要求部分
+                ui_pattern = re.search(r'###?\s*UI\s*要求：(.*?)(?=###?\s*[\d\.]|权限说明：|$)', cleaned_output, re.DOTALL)
+                if ui_pattern:
+                    ui_requirements = ui_pattern.group(1).strip()
+            
+            # 如果没有找到结构化内容，尝试从整个内容中智能提取
+            if not role and not goal:
+                self.logger.warning("未找到标准的narrative结构，尝试智能解析")
+                # 尝试找到任何"你是"或"角色"的描述作为角色
+                role_fallback = re.search(r'(你是.*?工程师.*?)(?=\n|。)', cleaned_output)
+                if role_fallback:
+                    role = role_fallback.group(1).strip()
+                else:
+                    role = f"你是一位 Android 工具类 App 的创意开发工程师"
+                    
+                # 尝试找到任何"构建"或"目标"的描述作为目标
+                goal_fallback = re.search(r'(构建.*?Fragment.*?)(?=\n|。)', cleaned_output)
+                if goal_fallback:
+                    goal = goal_fallback.group(1).strip()
+                else:
+                    goal = f"构建一个创意型 Fragment 页面"
+                    
+                # 如果还是没有找到功能输出，使用整个输出
+                if not function_output:
+                    function_output = cleaned_output
+            
+            # 获取主题对应的固定内容
+            fixed_content = self._get_fixed_content(theme)
+            self.logger.info(f"为主题 '{theme}' 选择了对应的固定内容")
             
             result = {
-                "role": gpt_data["role"].replace("{app_name}", app_name),
-                "goal": gpt_data["goal"].replace("{variant_folder}", variant_folder),
-                "function_output": function_output,  # 移除fixed_content，由前端处理
-                "ui_requirements": ui_requirements
+                "role": role,
+                "goal": goal,
+                "function_output": function_output,
+                "ui_requirements": ui_requirements,
+                "fixed_content": fixed_content,  # 新增：主题特定的固定内容
+                "theme_type": self._detect_theme_type(theme)  # 新增：检测到的主题类型
             }
-            self.logger.info("模板格式化成功")
+            
+            self.logger.info("Narrative格式模板格式化成功")
             return result
             
-        except json.JSONDecodeError as e:
-            # 如果JSON解析失败，使用正则表达式提取内容
-            self.logger.warning(f"JSON解析失败，使用备用解析方法: {str(e)}")
-            return self._parse_text_output(gpt_output, app_name, variant_folder, ui_color)
+        except Exception as e:
+            self.logger.error(f"解析narrative格式输出时发生错误: {str(e)}")
+            # 如果解析失败，返回基本结构
+            fixed_content = self._get_fixed_content(theme)
+            return {
+                "role": f"你是一位 Android 工具类 App 的创意开发工程师",
+                "goal": f"构建一个创意型 Fragment 页面",
+                "function_output": cleaned_output,
+                "ui_requirements": "",
+                "fixed_content": fixed_content,
+                "theme_type": self._detect_theme_type(theme)
+            }
     
-    def _parse_text_output(self, text: str, app_name: str, variant_folder: str, ui_color: str = "蓝色科技感") -> dict:
-        """备用文本解析方法"""
-        self.logger.info("使用正则表达式解析文本输出")
+    def _parse_text_output(self, text: str, app_name: str, variant_folder: str, ui_color: str = "蓝色科技感", theme: str = "", reference_file: str = "") -> dict:
+        """备用文本解析方法（已更新为处理narrative格式）"""
+        self.logger.info("使用备用方法解析narrative格式输出")
         
-        # 尝试提取JSON中的各个字段
-        role_match = re.search(r'"role"\s*:\s*"([^"]+)"', text)
-        goal_match = re.search(r'"goal"\s*:\s*"([^"]+)"', text)
+        # 获取主题对应的固定内容
+        fixed_content = self._get_fixed_content(theme)
         
-        # 提取功能模块
-        module1_title_match = re.search(r'"function_module_1"\s*:.*?"title"\s*:\s*"([^"]+)"', text, re.DOTALL)
-        module1_desc_match = re.search(r'"function_module_1"\s*:.*?"description"\s*:\s*"([^"]+)"', text, re.DOTALL)
-        module1_example_match = re.search(r'"function_module_1"\s*:.*?"example"\s*:\s*"([^"]+)"', text, re.DOTALL)
-        
-        module2_title_match = re.search(r'"function_module_2"\s*:.*?"title"\s*:\s*"([^"]+)"', text, re.DOTALL)
-        module2_desc_match = re.search(r'"function_module_2"\s*:.*?"description"\s*:\s*"([^"]+)"', text, re.DOTALL)
-        module2_example_match = re.search(r'"function_module_2"\s*:.*?"example"\s*:\s*"([^"]+)"', text, re.DOTALL)
-        
-        ui_match = re.search(r'"ui_requirements"\s*:\s*"([^"]+)"', text)
-        
-        # 构建功能输出
-        function_output = ""
-        if module1_title_match and module1_desc_match and module1_example_match:
-            function_output += f"{module1_title_match.group(1)}\n\n{module1_desc_match.group(1)}\n\n{module1_example_match.group(1)}\n\n"
-        
-        if module2_title_match and module2_desc_match and module2_example_match:
-            function_output += f"{module2_title_match.group(1)}\n\n{module2_desc_match.group(1)}\n\n{module2_example_match.group(1)}"
-        
-        if not function_output:
-            function_output = "解析失败，请重新生成"
-        # 移除固定内容添加，由前端处理
-        
+        # 简单的文本解析，如果主要解析方法失败
         result = {
-            "role": role_match.group(1).replace("{app_name}", app_name) if role_match else "",
-            "goal": goal_match.group(1).replace("{variant_folder}", variant_folder) if goal_match else "",
-            "function_output": function_output,
-            "ui_requirements": ui_match.group(1).replace("{ui_color}", ui_color) if ui_match else ""
+            "role": f"你是一位 Android 工具类 App 的创意开发工程师",
+            "goal": f"构建一个创意型 Fragment 页面",
+            "function_output": text,
+            "ui_requirements": "",
+            "fixed_content": fixed_content,
+            "theme_type": self._detect_theme_type(theme)
         }
-        self.logger.warning("文本解析完成，可能不完整")
+        
+        self.logger.warning("备用文本解析完成，使用简化结构")
         return result
