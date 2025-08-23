@@ -86,6 +86,8 @@ const PromptGenerator: React.FC = () => {
   })
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState(0)
   const [totalToGenerate, setTotalToGenerate] = useState(0)
+  const [showFullContent, setShowFullContent] = useState<{[tabId: string]: boolean}>({})
+  const [activeFullViewTab, setActiveFullViewTab] = useState<string | null>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -252,6 +254,135 @@ const PromptGenerator: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     await handleBatchGeneration()
+  }
+
+  const extractFunctionModules = (functionOutput: string): string => {
+    if (!functionOutput) return ''
+    
+    console.log('原始功能输出长度:', functionOutput.length)
+    
+    // 先清理输出中的角色、目标等非功能内容
+    let cleanedOutput = functionOutput
+    
+    // 移除开头可能的角色、目标信息，直到找到功能模块部分
+    const functionStart = cleanedOutput.search(/###?\s*🔹?\s*模块\s*\d+/i)
+    if (functionStart !== -1) {
+      cleanedOutput = cleanedOutput.substring(functionStart)
+      console.log('找到模块起始位置:', functionStart, '清理后长度:', cleanedOutput.length)
+    }
+    
+    // 移除末尾的UI要求、权限说明等，但保留模块内容
+    let endCutIndex = cleanedOutput.length
+    
+    // 查找各种结束标记的位置，取最早出现的
+    const endMarkers = [
+      /\n\s*UI\s*要求：/s,
+      /\n\s*权限说明：/s, 
+      /\n\s*数据采集逻辑：/s,
+      /\n\s*任务执行完/s,
+      /\n\s*###\s*\d+\./s  // 数字编号的其他部分
+    ]
+    
+    for (const marker of endMarkers) {
+      const matchIndex = cleanedOutput.search(marker)
+      if (matchIndex !== -1 && matchIndex < endCutIndex) {
+        endCutIndex = matchIndex
+      }
+    }
+    
+    if (endCutIndex < cleanedOutput.length) {
+      cleanedOutput = cleanedOutput.substring(0, endCutIndex)
+      console.log('移除末尾内容后长度:', cleanedOutput.length)
+    }
+    
+    // 使用更精确的方法分割模块
+    // 寻找所有可能的模块标题格式
+    const modulePatterns = [
+      /###?\s*🔹?\s*模块\s*\d+[：:]/gi,
+      /###?\s*🔹?\s*模块\s*\d+/gi,
+      /🔹\s*模块\s*\d+/gi,
+      /模块\s*\d+/gi
+    ]
+    
+    let moduleMatches = []
+    
+    // 尝试所有模式，使用第一个找到匹配的模式
+    for (const pattern of modulePatterns) {
+      pattern.lastIndex = 0 // 重置正则表达式状态
+      let match
+      const currentMatches = []
+      
+      while ((match = pattern.exec(cleanedOutput)) !== null) {
+        currentMatches.push({
+          index: match.index,
+          title: match[0],
+          length: match[0].length
+        })
+      }
+      
+      if (currentMatches.length > 0) {
+        moduleMatches = currentMatches
+        console.log(`使用模式匹配成功，找到 ${moduleMatches.length} 个模块`)
+        break
+      }
+    }
+    
+    if (moduleMatches.length === 0) {
+      console.log('没有找到模块标题，返回全部内容')
+      return cleanedOutput.trim() || functionOutput.substring(0, 1000) + '...'
+    }
+    
+    // 提取每个模块的完整内容
+    const modules = []
+    for (let i = 0; i < moduleMatches.length && i < 2; i++) {
+      const startIndex = moduleMatches[i].index
+      const endIndex = i < moduleMatches.length - 1 ? moduleMatches[i + 1].index : cleanedOutput.length
+      
+      let moduleContent = cleanedOutput.substring(startIndex, endIndex).trim()
+      console.log(`模块 ${i + 1} 内容长度:`, moduleContent.length, '起始:', startIndex, '结束:', endIndex)
+      
+      // 只移除明显的非模块内容
+      const cleanMarkers = [
+        /\n\s*UI\s*要求：.*$/s,
+        /\n\s*权限说明：.*$/s,
+        /\n\s*数据采集逻辑：.*$/s,
+        /\n\s*任务执行完.*$/s
+      ]
+      
+      for (const marker of cleanMarkers) {
+        moduleContent = moduleContent.replace(marker, '')
+      }
+      
+      moduleContent = moduleContent.trim()
+      
+      if (moduleContent && moduleContent.length > 20) { // 确保模块内容有意义
+        modules.push(moduleContent)
+        console.log(`模块 ${i + 1} 清理后长度:`, moduleContent.length)
+      }
+    }
+    
+    if (modules.length > 0) {
+      const result = modules.join('\n\n---\n\n')
+      console.log('最终返回内容长度:', result.length)
+      return result
+    }
+    
+    // 最后的fallback
+    const fallback = cleanedOutput.trim() || functionOutput.substring(0, 1000) + '...'
+    console.log('使用fallback，长度:', fallback.length)
+    return fallback
+  }
+
+  const toggleFullContent = (tabId: string) => {
+    if (showFullContent[tabId]) {
+      // 如果当前是展开状态，收起
+      setShowFullContent(prev => ({ ...prev, [tabId]: false }))
+      setActiveFullViewTab(null)
+    } else {
+      // 展开完整内容
+      setShowFullContent(prev => ({ ...prev, [tabId]: true }))
+      setActiveFullViewTab(tabId)
+    }
   }
 
   const regenerateTab = async (tabId: string) => {
@@ -501,8 +632,18 @@ const PromptGenerator: React.FC = () => {
                 </div>
               ) : tab.response.role ? (
                 <div className="space-y-6">
-                  {/* 重新生成按钮 */}
-                  <div className="flex justify-end mb-4">
+                  {/* 操作按钮区域 */}
+                  <div className="flex justify-between items-center mb-4">
+                    <button
+                      onClick={() => toggleFullContent(tab.id)}
+                      className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-md hover:bg-green-100 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>{showFullContent[tab.id] ? '收起完整版' : '最终版本'}</span>
+                    </button>
+                    
                     <button
                       onClick={() => regenerateTab(tab.id)}
                       disabled={tab.isLoading}
@@ -515,51 +656,87 @@ const PromptGenerator: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* 文档内容 */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-800 mb-2">角色：</h3>
-                    <p className="text-gray-700 leading-relaxed">{tab.response.role}</p>
-                  </div>
+                  {showFullContent[tab.id] ? (
+                    /* 完整内容视图 */
+                    <div className="space-y-6">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                        <h4 className="text-green-800 font-medium mb-2">📋 最终版本 - 完整解析内容</h4>
+                        <p className="text-green-700 text-sm">以下是包含所有字段的完整提示词文档</p>
+                      </div>
 
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-800 mb-2">目标：</h3>
-                    <p className="text-gray-700 leading-relaxed">{tab.response.goal}</p>
-                  </div>
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-800 mb-2">角色：</h3>
+                        <p className="text-gray-700 leading-relaxed">{tab.response.role}</p>
+                      </div>
 
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-800 mb-2">功能输出：</h3>
-                    <pre className="bg-gray-50 p-4 rounded-md text-sm text-gray-700 whitespace-pre-wrap">
-                      {tab.response.function_output}
-                    </pre>
-                  </div>
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-800 mb-2">目标：</h3>
+                        <p className="text-gray-700 leading-relaxed">{tab.response.goal}</p>
+                      </div>
 
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-800 mb-2">UI 要求：</h3>
-                    <p className="text-gray-700 leading-relaxed">{tab.response.ui_requirements}</p>
-                  </div>
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-800 mb-2">功能输出：</h3>
+                        <pre className="bg-gray-50 p-4 rounded-md text-sm text-gray-700 whitespace-pre-wrap">
+                          {tab.response.function_output}
+                        </pre>
+                      </div>
 
-                  {/* 主题类型显示 */}
-                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                    <h4 className="text-sm font-medium text-blue-800 mb-2">检测到的主题类型</h4>
-                    <p className="text-blue-700 text-sm">
-                      <span className="font-semibold">{tab.response.theme_type}</span> 
-                      {tab.response.theme_type !== 'default' && (
-                        <span className="ml-2 text-xs bg-blue-100 px-2 py-1 rounded">已应用专用技术要求</span>
-                      )}
-                    </p>
-                  </div>
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-800 mb-2">UI 要求：</h3>
+                        <p className="text-gray-700 leading-relaxed">{tab.response.ui_requirements}</p>
+                      </div>
 
-                  {/* 固定内容拼接组件 */}
-                  <FixedContentAppender 
-                    baseContent={{
-                      role: tab.response.role,
-                      goal: tab.response.goal,
-                      function_output: tab.response.function_output,
-                      ui_requirements: tab.response.ui_requirements,
-                      fixed_content: tab.response.fixed_content,
-                      theme_type: tab.response.theme_type
-                    }}
-                  />
+                      {/* 主题类型显示 */}
+                      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                        <h4 className="text-sm font-medium text-blue-800 mb-2">检测到的主题类型</h4>
+                        <p className="text-blue-700 text-sm">
+                          <span className="font-semibold">{tab.response.theme_type}</span> 
+                          {tab.response.theme_type !== 'default' && (
+                            <span className="ml-2 text-xs bg-blue-100 px-2 py-1 rounded">已应用专用技术要求</span>
+                          )}
+                        </p>
+                      </div>
+
+                      {/* 固定内容拼接组件 */}
+                      <FixedContentAppender 
+                        baseContent={{
+                          role: tab.response.role,
+                          goal: tab.response.goal,
+                          function_output: tab.response.function_output,
+                          ui_requirements: tab.response.ui_requirements,
+                          fixed_content: tab.response.fixed_content,
+                          theme_type: tab.response.theme_type
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    /* 简化的功能模块视图 */
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <h4 className="text-blue-800 font-medium mb-2">🔍 功能模块预览</h4>
+                        <p className="text-blue-700 text-sm">仅显示核心功能模块，点击"最终版本"查看完整内容</p>
+                      </div>
+
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-800 mb-3">📱 功能模块：</h3>
+                        <div className="bg-gray-50 p-4 rounded-md">
+                          <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                            {extractFunctionModules(tab.response.function_output)}
+                          </pre>
+                        </div>
+                      </div>
+                      
+                      <div className="text-center py-4 border-t border-gray-200">
+                        <p className="text-gray-500 text-sm mb-2">👆 这里只显示核心功能模块</p>
+                        <button
+                          onClick={() => toggleFullContent(tab.id)}
+                          className="text-green-600 hover:text-green-700 font-medium text-sm underline"
+                        >
+                          点击"最终版本"查看角色、目标、UI要求等完整内容 →
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
