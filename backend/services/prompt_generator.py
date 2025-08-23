@@ -382,10 +382,11 @@ UI要求：
             goal_match = re.search(r'目标：\s*(.*?)(?=功能输出：)', cleaned_output, re.DOTALL)
             
             # 提取功能模块内容（从"功能输出："开始到"UI要求："之前，允许有无空格）
-            function_content_match = re.search(r'功能输出：\s*(.*?)(?=UI\s*要求：)', cleaned_output, re.DOTALL)
+            # 使用更宽松的匹配模式，如果没有"UI要求："就到固定内容部分
+            function_content_match = re.search(r'功能输出：\s*(.*?)(?=UI\s*要求：|权限说明：|数据采集逻辑：|###\s*\d+\.|$)', cleaned_output, re.DOTALL)
             
             # 提取UI要求（从"UI要求："开始，到固定内容之前）
-            ui_match = re.search(r'UI\s*要求：\s*(.*?)(?=\n\s*###|权限说明：|数据采集逻辑：|$)', cleaned_output, re.DOTALL)
+            ui_match = re.search(r'UI\s*要求：\s*(.*?)(?=\n\s*###|权限说明：|数据采集逻辑：|任务执行完|$)', cleaned_output, re.DOTALL)
             
             # 构建结果
             role = role_match.group(1).strip() if role_match else ""
@@ -445,23 +446,76 @@ UI要求：
                 # 确保模块之间的"---"前后有换行
                 function_output = re.sub(r'([^\n])(\s*---\s*)([^\n])', r'\1\n\n\2\n\n\3', function_output)
                 
-                # 强化示例展示格式化
+                # 强化示例展示格式化 - 全面优化（移除emoji符号并处理文本模式）
                 # 1. 确保"**示例展示：**"独占一行
                 function_output = re.sub(r'(\*\*示例展示：\*\*)\s*([^\n])', r'\1\n\2', function_output)
                 
-                # 2. 确保每个emoji都从新行开始
-                for emoji in ['📅', '✨', '🌌', '📚', '📌']:
-                    function_output = re.sub(rf'([^\n])\s*({emoji})', r'\1\n\2', function_output)
+                # 2. 处理emoji符号替换和文字模式的标准化
+                emoji_patterns = {
+                    '📅': '日期：',
+                    '✨': '动画：',
+                    '🌌': '界面展示：',
+                    '📚': '数据展示格式：',
+                    '📌': '点击操作：'
+                }
                 
-                # 3. 处理数据列表格式 (📚 开头的部分)
-                # 确保列表项换行: - 项目1\n- 项目2
-                function_output = re.sub(r'(📚[^📌\n]*?：)\s*-\s*([^-\n])', r'\1\n- \2', function_output)
-                # 确保多个列表项之间换行
-                function_output = re.sub(r'([^-\n])\s*-\s*([^-])', r'\1\n- \2', function_output)
+                # 先处理特殊的日期格式问题 (如: "📅 2023\n- 09\n- 15 10:00 AM")
+                function_output = re.sub(r'📅\s*(\d{4})\s*-\s*(\d{1,2})\s*-\s*(\d{1,2})', r'日期： \1年\2月\3日', function_output)
+                function_output = re.sub(r'📅\s*(\d{4})\n-\s*(\d{1,2})\n-\s*(\d{1,2})', r'日期： \1年\2月\3日', function_output)
                 
-                # 4. 处理点击操作格式 (📌 开头的部分)
+                # 替换emoji为文字标识符并确保格式正确
+                for emoji, replacement in emoji_patterns.items():
+                    # 确保每个示例项前有换行
+                    function_output = re.sub(rf'([^\n])\s*{re.escape(emoji)}', r'\1\n' + replacement, function_output)
+                    # 替换剩余的emoji
+                    function_output = function_output.replace(emoji, replacement)
+                
+                # 3. 处理已经是文字格式的示例类型，确保它们也正确换行
+                text_patterns = ['日期：', '动画：', '界面展示：', '数据展示格式：', '点击操作：']
+                for pattern in text_patterns:
+                    # 确保每个文字示例类型都独立成行
+                    function_output = re.sub(rf'([^\n])\s*({re.escape(pattern)})', r'\1\n\2', function_output)
+                    # 处理可能的重复标识符（如 "动画： 动画："）
+                    function_output = re.sub(rf'{re.escape(pattern)}\s*{re.escape(pattern)}', pattern, function_output)
+                
+                # 3. 处理数据列表格式
+                # 确保"数据展示格式："后的内容独立成行
+                function_output = re.sub(r'(数据展示格式：)\s*([^-\n])', r'\1\n- \2', function_output)
+                # 确保每个列表项都独立成行
+                function_output = re.sub(r'([^-\n])\s*-\s*([^-\n])', r'\1\n- \2', function_output)
+                
+                # 4. 处理点击操作格式
                 # 确保 → 符号换行
-                function_output = re.sub(r'(📌[^→\n]*?)\s*(→)', r'\1\n\2', function_output)
+                function_output = re.sub(r'(点击操作：[^→\n]*?)\s*(→)', r'\1\n\2', function_output)
+                
+                # 5. 特殊处理：确保所有示例点都独立成行
+                示例类型 = ['日期：', '动画：', '界面展示：', '数据展示格式：', '点击操作：']
+                for i in range(len(示例类型) - 1):
+                    current = 示例类型[i]
+                    next_type = 示例类型[i + 1]
+                    # 确保不同示例类型之间换行
+                    function_output = re.sub(rf'({current}[^\n]*)\s+({next_type})', r'\1\n\2', function_output)
+                
+                # 6. 强化示例展示标题的独立性 - 额外处理
+                # 处理示例展示后直接跟示例内容的情况
+                function_output = re.sub(r'(\*\*示例展示：\*\*)\s*(日期：|动画：|界面展示：)', r'\1\n\2', function_output)
+                
+                # 处理其他可能的紧挨着的情况，确保示例展示总是独立一行
+                function_output = re.sub(r'(\*\*示例展示：\*\*)([^\n])', r'\1\n\2', function_output)
+                
+                # 6. 清理示例展示区域内的多余换行，但保持结构
+                function_output = re.sub(r'(\*\*示例展示：\*\*\n)\n+', r'\1', function_output)
+                
+                # 7. 移除其他可能残留的emoji符号（通用emoji清理）
+                emoji_pattern = re.compile("["
+                    u"\U0001F600-\U0001F64F"  # emoticons
+                    u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                    u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                    u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                    "]+", flags=re.UNICODE)
+                function_output = emoji_pattern.sub('', function_output)
+                
+                self.logger.info("示例展示区域格式化完成（已移除emoji符号）")
                 
                 # 移除末尾可能的UI要求内容
                 function_output = re.sub(r'\n\s*UI\s*要求：.*$', '', function_output, flags=re.DOTALL)
@@ -537,15 +591,16 @@ UI要求：
                 # 尝试更宽松的功能输出匹配
                 if not function_output:
                     function_patterns = [
-                        r'功能输出：\s*(.*?)(?=UI|### |\n\n### |\n权限|$)',
-                        r'### 🔹.*?模块.*?(?=UI|权限|$)',
-                        r'模块.*?：.*?(?=UI|权限|$)',
+                        r'功能输出：\s*(.*?)(?=UI\s*要求：|权限说明：|数据采集逻辑：|任务执行完|$)',
+                        r'功能输出：\s*(.*?)(?=### \d+\.|$)',
+                        r'### 🔹.*?模块.*?(?=UI|权限|数据采集|任务执行|$)',
+                        r'模块\s*\d+.*?(?=UI|权限|数据采集|任务执行|$)',
                     ]
                     for pattern in function_patterns:
                         function_match = re.search(pattern, cleaned_output, re.DOTALL)
                         if function_match:
                             function_output = function_match.group(0 if '模块' in pattern else 1).strip()
-                            self.logger.info(f"通过增强模式匹配到功能输出: {function_output[:50]}...")
+                            self.logger.info(f"通过增强模式匹配到功能输出: {function_output[:100]}...")
                             break
             
             # 特殊处理：如果内容全部耦合在一起，尝试分离
@@ -562,10 +617,18 @@ UI要求：
                 if goal_pattern:
                     goal = goal_pattern.group(1).strip()
                 
-                # 尝试分离功能模块部分（从"功能输出："到"UI要求："之间的内容）
-                function_pattern = re.search(r'功能输出：(.*?)(?=UI\s*要求：)', cleaned_output, re.DOTALL)
-                if function_pattern:
-                    function_output = function_pattern.group(1).strip()
+                # 尝试分离功能模块部分（从"功能输出："到"UI要求："或其他固定内容之间的内容）
+                function_patterns = [
+                    r'功能输出：(.*?)(?=UI\s*要求：)',
+                    r'功能输出：(.*?)(?=权限说明：|数据采集逻辑：|任务执行完|###\s*\d+\.)',
+                    r'功能输出：(.*?)$',  # 最后兜底，如果没有终止符就到文档结尾
+                ]
+                for pattern in function_patterns:
+                    function_pattern = re.search(pattern, cleaned_output, re.DOTALL)
+                    if function_pattern:
+                        function_output = function_pattern.group(1).strip()
+                        self.logger.info(f"通过模式 '{pattern}' 提取到功能输出，长度: {len(function_output)}")
+                        break
                     
                 # 尝试分离UI要求部分
                 ui_pattern = re.search(r'###?\s*UI\s*要求：(.*?)(?=###?\s*[\d\.]|权限说明：|$)', cleaned_output, re.DOTALL)
@@ -613,10 +676,12 @@ UI要求：
             self.logger.error(f"解析narrative格式输出时发生错误: {str(e)}")
             # 如果解析失败，返回基本结构
             fixed_content = self._get_fixed_content(theme)
+            # 使用原始输出作为fallback，避免cleaned_output未定义的问题
+            fallback_output = locals().get('cleaned_output', gpt_output)
             return {
                 "role": f"你是一位 Android 工具类 App 的创意开发工程师",
                 "goal": f"构建一个创意型 Fragment 页面",
-                "function_output": cleaned_output,
+                "function_output": fallback_output,
                 "ui_requirements": "",
                 "fixed_content": fixed_content,
                 "theme_type": self._detect_theme_type(theme)
