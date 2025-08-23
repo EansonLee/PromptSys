@@ -405,20 +405,36 @@ UI要求：
             
             # 格式化功能输出，确保正确的分行格式
             if function_output:
-                # 移除重复的功能输出内容（避免重复显示）
-                function_lines = function_output.split('\n')
-                seen_lines = []
-                for line in function_lines:
-                    stripped_line = line.strip()
-                    # 如果是重复的模块标题或内容，跳过
-                    if stripped_line and not any(seen == stripped_line for seen in seen_lines[-5:]):
-                        seen_lines.append(stripped_line)
-                function_output = '\n'.join(seen_lines)
+                # 先查找所有模块，确保不丢失任何模块
+                all_modules = list(re.finditer(r'###?\s*🔹?\s*模块\s*\d+', function_output))
+                self.logger.info(f"在原始内容中找到 {len(all_modules)} 个模块")
                 
-                # 确保模块内容从第一个模块开始
-                first_module = re.search(r'###?\s*🔹?\s*模块', function_output)
-                if first_module:
-                    function_output = function_output[first_module.start():]
+                # 如果找到模块，记录每个模块的位置和内容预览
+                for i, module in enumerate(all_modules):
+                    module_text = function_output[module.start():module.start()+50].replace('\n', ' ')
+                    self.logger.info(f"模块 {i+1}: 位置 {module.start()}, 内容预览: {module_text}")
+                
+                # 移除开头的多余符号，但要保持模块内容完整
+                # 先找到第一个模块的位置
+                if all_modules:
+                    # 如果有模块，从第一个模块开始保留内容
+                    first_module_start = all_modules[0].start()
+                    function_output = function_output[first_module_start:]
+                    self.logger.info(f"从第一个模块（位置 {first_module_start}）开始保留内容")
+                else:
+                    # 如果没找到标准格式，尝试更宽松的匹配
+                    first_module = re.search(r'模块\s*\d+', function_output)
+                    if first_module:
+                        function_output = function_output[first_module.start():]
+                        self.logger.info("使用宽松匹配找到模块开始位置")
+                    else:
+                        # 如果完全没找到模块标记，只清理开头的符号但保留内容
+                        function_output = re.sub(r'^[\s#]*\n*', '', function_output.strip())
+                        self.logger.warning("没有找到任何模块标记，仅清理开头符号")
+                
+                # 重新验证清理后还有多少个模块
+                remaining_modules = list(re.finditer(r'###?\s*🔹?\s*模块\s*\d+', function_output))
+                self.logger.info(f"清理后保留了 {len(remaining_modules)} 个模块")
                 
                 # 确保每个"- "开头的要点分行显示
                 function_output = re.sub(r'([^\n])\s*-\s+([^-])', r'\1\n- \2', function_output)
@@ -429,11 +445,23 @@ UI要求：
                 # 确保模块之间的"---"前后有换行
                 function_output = re.sub(r'([^\n])(\s*---\s*)([^\n])', r'\1\n\n\2\n\n\3', function_output)
                 
-                # 确保"**示例展示：**"后面的内容换行
+                # 强化示例展示格式化
+                # 1. 确保"**示例展示：**"独占一行
                 function_output = re.sub(r'(\*\*示例展示：\*\*)\s*([^\n])', r'\1\n\2', function_output)
                 
-                # 确保emoji后面的内容换行
-                function_output = re.sub(r'(📅|✨|🌌|📚|📌)\s*([^\n])', r'\1 \2\n', function_output)
+                # 2. 确保每个emoji都从新行开始
+                for emoji in ['📅', '✨', '🌌', '📚', '📌']:
+                    function_output = re.sub(rf'([^\n])\s*({emoji})', r'\1\n\2', function_output)
+                
+                # 3. 处理数据列表格式 (📚 开头的部分)
+                # 确保列表项换行: - 项目1\n- 项目2
+                function_output = re.sub(r'(📚[^📌\n]*?：)\s*-\s*([^-\n])', r'\1\n- \2', function_output)
+                # 确保多个列表项之间换行
+                function_output = re.sub(r'([^-\n])\s*-\s*([^-])', r'\1\n- \2', function_output)
+                
+                # 4. 处理点击操作格式 (📌 开头的部分)
+                # 确保 → 符号换行
+                function_output = re.sub(r'(📌[^→\n]*?)\s*(→)', r'\1\n\2', function_output)
                 
                 # 移除末尾可能的UI要求内容
                 function_output = re.sub(r'\n\s*UI\s*要求：.*$', '', function_output, flags=re.DOTALL)
