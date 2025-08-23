@@ -20,10 +20,13 @@ def test_api():
     
     # 测试不同的endpoint路径
     endpoints_to_test = [
-        f"{base_url}/chat/completions",
+        "https://api.chatanywhere.tech/v1/chat/completions",
+        f"{base_url}/chat/completions" if base_url else None,
         "https://api.free.fastapi.pro/v1/chat/completions",
         "https://api.free.fastapi.pro/chat/completions"
     ]
+    # 过滤掉None值
+    endpoints_to_test = [ep for ep in endpoints_to_test if ep is not None]
     
     headers = {
         "Content-Type": "application/json",
@@ -61,12 +64,13 @@ def test_api():
 
 def test_different_keys():
     """测试不同的API Key格式"""
-    base_url = "https://api.free.fastapi.pro/v1"
+    base_url = "https://api.chatanywhere.tech/v1"
     
     # 可能的API Key
     test_keys = [
-        "sk-FastAPI1ZMbDl0KBg0KFp5G0EON1pGNSR0O5xMuuU8wa1ndq",  # 原始提供的key
+        "sk-F3L90fLAP02CZkFzVsxmH0g80QpssnpXfazmZ2fszMMqk6Ew",  # 新的中转站key
         os.getenv("OPENAI_API_KEY"),  # 环境变量中的key
+        "sk-FastAPI1ZMbDl0KBg0KFp5G0EON1pGNSR0O5xMuuU8wa1ndq",  # 原始提供的key
     ]
     
     print("\n=== 测试不同API Key ===")
