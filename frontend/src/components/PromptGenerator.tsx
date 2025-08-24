@@ -259,118 +259,131 @@ const PromptGenerator: React.FC = () => {
   const extractFunctionModules = (functionOutput: string): string => {
     if (!functionOutput) return ''
     
+    console.log('=== 开始提取功能模块（防止错误分割）===')
     console.log('原始功能输出长度:', functionOutput.length)
     
-    // 先清理输出中的角色、目标等非功能内容
-    let cleanedOutput = functionOutput
+    // 第一步：移除示例展示内容
+    let content = functionOutput.replace(/\*\*示例展示[：:]\*\*[\s\S]*?(?=\n\n|$)/g, '')
+    console.log('移除示例展示后长度:', content.length)
     
-    // 移除开头可能的角色、目标信息，直到找到功能模块部分
-    const functionStart = cleanedOutput.search(/###?\s*🔹?\s*模块\s*\d+/i)
-    if (functionStart !== -1) {
-      cleanedOutput = cleanedOutput.substring(functionStart)
-      console.log('找到模块起始位置:', functionStart, '清理后长度:', cleanedOutput.length)
-    }
-    
-    // 移除末尾的UI要求、权限说明等，但保留模块内容
-    let endCutIndex = cleanedOutput.length
-    
-    // 查找各种结束标记的位置，取最早出现的
+    // 第二步：移除明确的结束内容（UI要求、权限等）
     const endMarkers = [
-      /\n\s*UI\s*要求：/s,
-      /\n\s*权限说明：/s, 
-      /\n\s*数据采集逻辑：/s,
-      /\n\s*任务执行完/s,
-      /\n\s*###\s*\d+\./s  // 数字编号的其他部分
+      'UI要求：',
+      'UI 要求：', 
+      '权限说明：',
+      '数据采集逻辑：',
+      '任务执行完'
     ]
     
     for (const marker of endMarkers) {
-      const matchIndex = cleanedOutput.search(marker)
-      if (matchIndex !== -1 && matchIndex < endCutIndex) {
-        endCutIndex = matchIndex
-      }
-    }
-    
-    if (endCutIndex < cleanedOutput.length) {
-      cleanedOutput = cleanedOutput.substring(0, endCutIndex)
-      console.log('移除末尾内容后长度:', cleanedOutput.length)
-    }
-    
-    // 使用更精确的方法分割模块
-    // 寻找所有可能的模块标题格式
-    const modulePatterns = [
-      /###?\s*🔹?\s*模块\s*\d+[：:]/gi,
-      /###?\s*🔹?\s*模块\s*\d+/gi,
-      /🔹\s*模块\s*\d+/gi,
-      /模块\s*\d+/gi
-    ]
-    
-    let moduleMatches = []
-    
-    // 尝试所有模式，使用第一个找到匹配的模式
-    for (const pattern of modulePatterns) {
-      pattern.lastIndex = 0 // 重置正则表达式状态
-      let match
-      const currentMatches = []
-      
-      while ((match = pattern.exec(cleanedOutput)) !== null) {
-        currentMatches.push({
-          index: match.index,
-          title: match[0],
-          length: match[0].length
-        })
-      }
-      
-      if (currentMatches.length > 0) {
-        moduleMatches = currentMatches
-        console.log(`使用模式匹配成功，找到 ${moduleMatches.length} 个模块`)
+      const markerIndex = content.indexOf(marker)
+      if (markerIndex !== -1) {
+        content = content.substring(0, markerIndex).trim()
+        console.log(`在位置 ${markerIndex} 截断内容，因为发现: ${marker}`)
         break
       }
     }
     
-    if (moduleMatches.length === 0) {
-      console.log('没有找到模块标题，返回全部内容')
-      return cleanedOutput.trim() || functionOutput.substring(0, 1000) + '...'
-    }
+    // 第三步：使用灵活的模块识别，确保找到所有模块
+    const lines = content.split('\n')
+    const moduleStartIndexes = []
     
-    // 提取每个模块的完整内容
-    const modules = []
-    for (let i = 0; i < moduleMatches.length && i < 2; i++) {
-      const startIndex = moduleMatches[i].index
-      const endIndex = i < moduleMatches.length - 1 ? moduleMatches[i + 1].index : cleanedOutput.length
-      
-      let moduleContent = cleanedOutput.substring(startIndex, endIndex).trim()
-      console.log(`模块 ${i + 1} 内容长度:`, moduleContent.length, '起始:', startIndex, '结束:', endIndex)
-      
-      // 只移除明显的非模块内容
-      const cleanMarkers = [
-        /\n\s*UI\s*要求：.*$/s,
-        /\n\s*权限说明：.*$/s,
-        /\n\s*数据采集逻辑：.*$/s,
-        /\n\s*任务执行完.*$/s
+    // 识别模块标题的多种格式
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      const modulePatterns = [
+        /###\s*🔹?\s*模块\s*\d+/i,  // ### 🔹 模块 1
+        /🔹\s*模块\s*\d+/i,        // 🔹 模块 1
+        /模块\s*\d+[：:]/i,        // 模块 1：
+        /模块\s*\d+\s*[（(]/i      // 模块 1（
       ]
       
-      for (const marker of cleanMarkers) {
-        moduleContent = moduleContent.replace(marker, '')
+      let isModuleTitle = false
+      for (const pattern of modulePatterns) {
+        if (pattern.test(line)) {
+          isModuleTitle = true
+          break
+        }
       }
       
-      moduleContent = moduleContent.trim()
+      if (isModuleTitle) {
+        moduleStartIndexes.push(i)
+        console.log(`找到模块标题在第 ${i} 行: ${line}`)
+      }
+    }
+    
+    console.log(`找到 ${moduleStartIndexes.length} 个真正的模块标题`)
+    
+    if (moduleStartIndexes.length === 0) {
+      // 如果没有找到标准模块标题，尝试更宽松的匹配
+      console.log('没有找到标准模块标题，尝试宽松匹配')
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (line.includes('模块') && /\d+/.test(line)) {
+          moduleStartIndexes.push(i)
+          console.log(`宽松匹配找到模块在第 ${i} 行: ${line}`)
+        }
+      }
+    }
+    
+    if (moduleStartIndexes.length === 0) {
+      // 最后兜底：返回清理过的全部内容
+      console.log('仍然没有找到模块标题，返回全部清理后的内容')
+      return content.trim()
+    }
+    
+    // 第四步：提取每个模块的完整内容（不进行任何内部分割）
+    const modules = []
+    
+    for (let i = 0; i < moduleStartIndexes.length; i++) {
+      const startLineIndex = moduleStartIndexes[i]
+      const endLineIndex = i < moduleStartIndexes.length - 1 ? moduleStartIndexes[i + 1] : lines.length
       
-      if (moduleContent && moduleContent.length > 20) { // 确保模块内容有意义
+      // 提取从模块标题到下一个模块标题的所有内容
+      const moduleLines = lines.slice(startLineIndex, endLineIndex)
+      
+      // 保守的过滤：只移除明确的分隔符，保留所有实际内容
+      const filteredLines = moduleLines.filter(line => {
+        const trimmed = line.trim()
+        // 只移除完全空行和单独的分隔符行
+        return trimmed !== '' && trimmed !== '---' && trimmed !== '###' && trimmed !== '======'
+      })
+      
+      const moduleContent = filteredLines.join('\n').trim()
+      
+      console.log(`模块 ${i + 1} 内容长度: ${moduleContent.length}`)
+      console.log(`模块 ${i + 1} 开头: ${moduleContent.substring(0, 80).replace(/\n/g, '\\n')}...`)
+      
+      if (moduleContent && moduleContent.length > 10) {
         modules.push(moduleContent)
-        console.log(`模块 ${i + 1} 清理后长度:`, moduleContent.length)
+        
+        // 特别输出模块2的完整内容用于调试
+        if (i === 1) {
+          console.log('=== 模块2完整内容 ===')
+          console.log(moduleContent.substring(0, 200))
+        }
       }
     }
     
     if (modules.length > 0) {
       const result = modules.join('\n\n---\n\n')
-      console.log('最终返回内容长度:', result.length)
+      console.log(`=== 成功提取 ${modules.length} 个完整模块，总长度: ${result.length} ===`)
+      
+      // 确保不会有内容被意外分离
+      console.log('检查是否有内容被意外分离...')
+      const resultLines = result.split('\n')
+      const separateContentLines = resultLines.filter(line => {
+        const trimmed = line.trim()
+        return trimmed.includes('联动') || trimmed.includes('长期') || trimmed.includes('价值') || trimmed.includes('粘性')
+      })
+      console.log(`发现潜在分离内容行数: ${separateContentLines.length}`)
+      
       return result
     }
     
-    // 最后的fallback
-    const fallback = cleanedOutput.trim() || functionOutput.substring(0, 1000) + '...'
-    console.log('使用fallback，长度:', fallback.length)
-    return fallback
+    // 最终fallback
+    console.log('使用最终fallback')
+    return content.trim() || functionOutput.substring(0, 1000) + '...'
   }
 
   const toggleFullContent = (tabId: string) => {

@@ -446,9 +446,14 @@ UI要求：
                 # 确保模块之间的"---"前后有换行
                 function_output = re.sub(r'([^\n])(\s*---\s*)([^\n])', r'\1\n\n\2\n\n\3', function_output)
                 
-                # 强化示例展示格式化 - 全面优化（移除emoji符号并处理文本模式）
-                # 1. 确保"**示例展示：**"独占一行
-                function_output = re.sub(r'(\*\*示例展示：\*\*)\s*([^\n])', r'\1\n\2', function_output)
+                # 强化示例展示格式化 - 优先处理"**示例展示：**"的独立性
+                # 1. 首先确保"**示例展示：**"独占一行 - 最高优先级处理
+                # 处理前面有内容直接连接的情况
+                function_output = re.sub(r'([^\n])\s*(\*\*示例展示：\*\*)', r'\1\n\2', function_output)
+                # 处理后面有内容直接连接的情况  
+                function_output = re.sub(r'(\*\*示例展示：\*\*)\s*([^\n\s])', r'\1\n\2', function_output)
+                # 处理中间有空格但在同一行的情况
+                function_output = re.sub(r'(\*\*示例展示：\*\*)\s+([^\n])', r'\1\n\2', function_output)
                 
                 # 2. 处理emoji符号替换和文字模式的标准化
                 emoji_patterns = {
@@ -478,17 +483,17 @@ UI要求：
                     # 处理可能的重复标识符（如 "动画： 动画："）
                     function_output = re.sub(rf'{re.escape(pattern)}\s*{re.escape(pattern)}', pattern, function_output)
                 
-                # 3. 处理数据列表格式
+                # 4. 处理数据列表格式
                 # 确保"数据展示格式："后的内容独立成行
                 function_output = re.sub(r'(数据展示格式：)\s*([^-\n])', r'\1\n- \2', function_output)
                 # 确保每个列表项都独立成行
                 function_output = re.sub(r'([^-\n])\s*-\s*([^-\n])', r'\1\n- \2', function_output)
                 
-                # 4. 处理点击操作格式
+                # 5. 处理点击操作格式
                 # 确保 → 符号换行
                 function_output = re.sub(r'(点击操作：[^→\n]*?)\s*(→)', r'\1\n\2', function_output)
                 
-                # 5. 特殊处理：确保所有示例点都独立成行
+                # 6. 特殊处理：确保所有示例点都独立成行
                 示例类型 = ['日期：', '动画：', '界面展示：', '数据展示格式：', '点击操作：']
                 for i in range(len(示例类型) - 1):
                     current = 示例类型[i]
@@ -496,14 +501,12 @@ UI要求：
                     # 确保不同示例类型之间换行
                     function_output = re.sub(rf'({current}[^\n]*)\s+({next_type})', r'\1\n\2', function_output)
                 
-                # 6. 强化示例展示标题的独立性 - 额外处理
-                # 处理示例展示后直接跟示例内容的情况
-                function_output = re.sub(r'(\*\*示例展示：\*\*)\s*(日期：|动画：|界面展示：)', r'\1\n\2', function_output)
-                
-                # 处理其他可能的紧挨着的情况，确保示例展示总是独立一行
+                # 7. 最后再次确保"**示例展示：**"的完全独立性 - 双重保险
+                # 处理可能被之前步骤影响的情况
+                function_output = re.sub(r'([^\n])(\*\*示例展示：\*\*)', r'\1\n\2', function_output)
                 function_output = re.sub(r'(\*\*示例展示：\*\*)([^\n])', r'\1\n\2', function_output)
                 
-                # 6. 清理示例展示区域内的多余换行，但保持结构
+                # 8. 清理示例展示区域内的多余换行，但保持结构
                 function_output = re.sub(r'(\*\*示例展示：\*\*\n)\n+', r'\1', function_output)
                 
                 # 7. 移除其他可能残留的emoji符号（通用emoji清理）
@@ -515,7 +518,7 @@ UI要求：
                     "]+", flags=re.UNICODE)
                 function_output = emoji_pattern.sub('', function_output)
                 
-                self.logger.info("示例展示区域格式化完成（已移除emoji符号）")
+                self.logger.info("示例展示区域格式化完成（已确保**示例展示：**独立成行并移除emoji符号）")
                 
                 # 移除末尾可能的UI要求内容
                 function_output = re.sub(r'\n\s*UI\s*要求：.*$', '', function_output, flags=re.DOTALL)
