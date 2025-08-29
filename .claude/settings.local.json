@@ -26,7 +26,12 @@
       "Bash(git rm:*)",
       "Bash(git filter-branch:*)",
       "Bash(set BACKEND_PORT=8001)",
-      "Bash(del test_reference_file_feature.py test_api_reference_file.py)"
+      "Bash(del test_reference_file_feature.py test_api_reference_file.py)",
+      "mcp__ide__getDiagnostics",
+      "Bash(claude --version)",
+      "Bash(sed:*)",
+      "Bash(dir)",
+      "Bash(del test_simple.ps1)"
     ],
     "deny": [],
     "additionalDirectories": [

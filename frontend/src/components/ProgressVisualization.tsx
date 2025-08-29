@@ -6,24 +6,22 @@ interface ProgressData {
   progress: number
   status: string
   step: string
-  result?: any
+  result?: unknown
   error?: string
 }
 
 interface ProgressVisualizationProps {
   isVisible: boolean
   progressData?: ProgressData
-  onComplete?: (result: any) => void
+  onComplete?: (result: unknown) => void
   onError?: (error: string) => void
 }
 
 const ProgressVisualization: React.FC<ProgressVisualizationProps> = ({
   isVisible,
-  progressData: externalProgressData,
-  onComplete,
-  onError
+  progressData: externalProgressData
 }) => {
-  const [internalProgressData, setInternalProgressData] = useState<ProgressData>({
+  const [internalProgressData] = useState<ProgressData>({
     progress: 0,
     status: '准备开始...',
     step: '初始化'

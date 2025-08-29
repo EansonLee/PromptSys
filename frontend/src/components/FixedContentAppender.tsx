@@ -93,8 +93,8 @@ ${customFixedContent}`
             placeholder="请输入固定内容..."
           />
           <p className="text-sm text-gray-600 mt-2">
-            系统已根据主题 "<strong>{baseContent.theme_type}</strong>" 自动选择了相应的技术要求。
-            这部分内容将在"功能输出"后、"UI要求"前插入到最终模板中。
+            系统已根据主题 &quot;<strong>{baseContent.theme_type}</strong>&quot; 自动选择了相应的技术要求。
+            这部分内容将在&quot;功能输出&quot;后、&quot;UI要求&quot;前插入到最终模板中。
           </p>
         </div>
       )}

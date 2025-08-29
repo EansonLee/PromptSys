@@ -9,8 +9,13 @@ from datetime import datetime
 import json
 import asyncio
 from typing import AsyncGenerator
+import platform
+import subprocess
+import requests
 
 from services.prompt_generator import PromptGenerator
+from services.claude_cli_automation import claude_cli_automation
+from services.gitlab_integration import gitlab_integration
 
 # 强制加载.env文件，覆盖系统环境变量
 load_dotenv(override=True)
@@ -53,6 +58,12 @@ class PromptResponse(BaseModel):
     theme_type: str
     raw_gpt_output: str
     timestamp: str
+
+class RepositoryRequest(BaseModel):
+    repository_url: str
+
+class TaskRequest(BaseModel):
+    selected_prompt: dict
 
 # 启动时检查配置
 logger.info("=== 系统配置检查 ===")
@@ -214,6 +225,90 @@ async def generate_prompt_stream_endpoint(request: PromptRequest):
             "X-Accel-Buffering": "no"  # 防止nginx缓冲
         }
     )
+
+@app.post("/open-claude-cli")
+async def open_claude_cli():
+    """打开 Claude CLI - 跨平台实现"""
+    logger.info("收到打开 Claude CLI 请求")
+    
+    result = claude_cli_automation.open_claude_cli()
+    
+    if result["status"] == "success":
+        return result
+    else:
+        raise HTTPException(status_code=500, detail=result["message"])
+
+@app.post("/get-repository")
+async def get_repository(request: RepositoryRequest):
+    """获取 GitLab 仓库信息"""
+    logger.info(f"收到获取仓库请求: {request.repository_url}")
+    
+    result = gitlab_integration.get_repository_info(request.repository_url)
+    
+    if result["status"] == "success":
+        return result
+    else:
+        raise HTTPException(status_code=500, detail=result["message"])
+
+@app.post("/get-tasks")
+async def get_tasks(request: TaskRequest):
+    """将选中的提示词传递给 Claude CLI"""
+    logger.info("收到获取任务请求")
+    
+    try:
+        file_path = claude_cli_automation.write_prompt_to_file(request.selected_prompt)
+        
+        return {
+            "status": "success",
+            "message": "任务已成功传递给 Claude CLI",
+            "prompt_file": file_path,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"获取任务失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取任务失败: {str(e)}")
+
+@app.post("/execute-tasks")
+async def execute_tasks():
+    """执行 Claude CLI 任务"""
+    logger.info("收到执行任务请求")
+    
+    try:
+        # 查找最新的提示词文件
+        temp_dir = os.path.join(os.getcwd(), "temp_claude")
+        if not os.path.exists(temp_dir):
+            raise HTTPException(status_code=400, detail="未找到任务文件，请先获取任务")
+        
+        # 获取最新的提示词文件
+        prompt_files = [f for f in os.listdir(temp_dir) if f.startswith("claude_prompt_") and f.endswith(".txt")]
+        if not prompt_files:
+            raise HTTPException(status_code=400, detail="未找到任务文件，请先获取任务")
+        
+        # 选择最新的文件
+        latest_file = max(prompt_files, key=lambda x: os.path.getmtime(os.path.join(temp_dir, x)))
+        prompt_file_path = os.path.join(temp_dir, latest_file)
+        
+        result = claude_cli_automation.execute_claude_command(prompt_file_path)
+        
+        if result["status"] == "success":
+            return result
+        else:
+            raise HTTPException(status_code=500, detail=result["message"])
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"执行任务失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"执行任务失败: {str(e)}")
+
+@app.post("/cleanup-temp-files")
+async def cleanup_temp_files():
+    """清理临时文件"""
+    logger.info("收到清理临时文件请求")
+    
+    result = claude_cli_automation.cleanup_temp_files()
+    return result
 
 @app.get("/health")
 async def health_check():

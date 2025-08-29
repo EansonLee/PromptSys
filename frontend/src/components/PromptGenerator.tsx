@@ -84,10 +84,8 @@ const PromptGenerator: React.FC = () => {
     status: '准备开始...',
     step: '初始化'
   })
-  const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState(0)
-  const [totalToGenerate, setTotalToGenerate] = useState(0)
   const [showFullContent, setShowFullContent] = useState<{[tabId: string]: boolean}>({})
-  const [activeFullViewTab, setActiveFullViewTab] = useState<string | null>(null)
+  const [selectedPrompts, setSelectedPrompts] = useState<{[tabId: string]: boolean}>({})
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -194,8 +192,6 @@ const PromptGenerator: React.FC = () => {
     setError(null)
     setResponse(null)
     setTabDocuments([])
-    setCurrentGeneratingIndex(0)
-    setTotalToGenerate(tabCount)
     
     // 初始化标签页
     const initialTabs: TabDocument[] = Array.from({ length: tabCount }, (_, index) => ({
@@ -211,8 +207,6 @@ const PromptGenerator: React.FC = () => {
     try {
       // 逐个生成文档
       for (let i = 0; i < tabCount; i++) {
-        setCurrentGeneratingIndex(i)
-        
         const result = await generateSingleDocument(i, tabCount, false)
         
         // 更新对应标签页的结果
@@ -390,11 +384,9 @@ const PromptGenerator: React.FC = () => {
     if (showFullContent[tabId]) {
       // 如果当前是展开状态，收起
       setShowFullContent(prev => ({ ...prev, [tabId]: false }))
-      setActiveFullViewTab(null)
     } else {
       // 展开完整内容
       setShowFullContent(prev => ({ ...prev, [tabId]: true }))
-      setActiveFullViewTab(tabId)
     }
   }
 
@@ -446,6 +438,99 @@ const PromptGenerator: React.FC = () => {
     }
   }
 
+  // Action button handlers
+  const handleOpenClaudePage = async () => {
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiBaseUrl}/open-claude-cli`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || '打开页面失败')
+      alert('Claude CLI 已成功打开')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '打开页面失败')
+    }
+  }
+
+  const handleGetRepository = async () => {
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiBaseUrl}/get-repository`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repository_url: 'https://gitlab.example.com/your-repo' }) // 可配置
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || '获取仓库失败')
+      alert(`仓库信息获取成功: ${result.repository_name}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '获取仓库失败')
+    }
+  }
+
+  const handleGetTasks = async () => {
+    const selectedTabIds = Object.keys(selectedPrompts).filter(tabId => selectedPrompts[tabId])
+    if (selectedTabIds.length === 0) {
+      setError('请至少选择一个提示词')
+      return
+    }
+
+    const selectedTab = tabDocuments.find(tab => selectedTabIds.includes(tab.id))
+    if (!selectedTab || !selectedTab.response.role) {
+      setError('所选提示词内容无效')
+      return
+    }
+
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiBaseUrl}/get-tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selected_prompt: {
+            role: selectedTab.response.role,
+            goal: selectedTab.response.goal,
+            function_output: selectedTab.response.function_output,
+            ui_requirements: selectedTab.response.ui_requirements
+          }
+        })
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || '获取任务失败')
+      alert('任务已成功传递给 Claude CLI')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '获取任务失败')
+    }
+  }
+
+  const handleExecuteTasks = async () => {
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiBaseUrl}/execute-tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || '执行任务失败')
+      alert(`任务执行完成: ${result.status}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '执行任务失败')
+    }
+  }
+
+  const handlePromptSelection = (tabId: string, selected: boolean) => {
+    setSelectedPrompts(() => {
+      // 单选逻辑：只能选择一个提示词
+      const newSelection: {[key: string]: boolean} = {}
+      if (selected) {
+        newSelection[tabId] = true
+      }
+      return newSelection
+    })
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* 进度可视化组件 */}
@@ -453,7 +538,7 @@ const PromptGenerator: React.FC = () => {
         isVisible={showProgress}
         progressData={progressData}
         onComplete={(result) => {
-          setResponse(result)
+          setResponse(result as PromptResponse | null)
           setShowProgress(false)
         }}
         onError={(error) => {
@@ -562,7 +647,7 @@ const PromptGenerator: React.FC = () => {
               placeholder="例如：HomeFragment（自动添加@前缀和.kt后缀）"
             />
             <p className="text-xs text-gray-500 mt-1">
-              输入文件名（如"HomeFragment"），系统会自动格式化为"@HomeFragment.kt"
+              输入文件名（如&quot;HomeFragment&quot;），系统会自动格式化为&quot;@HomeFragment.kt&quot;
             </p>
           </div>
 
@@ -601,6 +686,83 @@ const PromptGenerator: React.FC = () => {
         )}
       </div>
 
+      {/* AI Agent 操作按钮区域 */}
+      {tabDocuments.length > 0 && (
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+            <svg className="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            AI Agent 自动化操作
+          </h2>
+          
+          {/* 选择提示词提醒 */}
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-center mb-2">
+              <svg className="w-5 h-5 text-amber-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h4 className="text-amber-800 font-medium">操作提醒</h4>
+            </div>
+            <p className="text-amber-700 text-sm">
+              请在下方标签页中选择一个生成的提示词，然后使用以下按钮进行 AI Agent 自动化操作
+            </p>
+          </div>
+
+          {/* 四个操作按钮 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button
+              onClick={handleOpenClaudePage}
+              className="flex flex-col items-center p-4 bg-white border-2 border-green-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all duration-200 group"
+            >
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-green-200 transition-colors">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700 group-hover:text-green-700">打开页面</span>
+            </button>
+
+            <button
+              onClick={handleGetRepository}
+              className="flex flex-col items-center p-4 bg-white border-2 border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 group"
+            >
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 1v6M16 1v6" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">获取仓库</span>
+            </button>
+
+            <button
+              onClick={handleGetTasks}
+              className="flex flex-col items-center p-4 bg-white border-2 border-orange-200 rounded-lg hover:border-orange-400 hover:bg-orange-50 transition-all duration-200 group"
+            >
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-orange-200 transition-colors">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700 group-hover:text-orange-700">获取任务</span>
+            </button>
+
+            <button
+              onClick={handleExecuteTasks}
+              className="flex flex-col items-center p-4 bg-white border-2 border-purple-200 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-all duration-200 group"
+            >
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M9 10V9a2 2 0 012-2h2a2 2 0 012 2v1m-6 0V9a2 2 0 012-2h2a2 2 0 012 2v1m-6 0h6" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700">执行任务</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 多标签页生成结果 */}
       {tabDocuments.length > 0 && (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -620,9 +782,22 @@ const PromptGenerator: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="selectedPrompt"
+                      checked={selectedPrompts[tab.id] || false}
+                      onChange={(e) => handlePromptSelection(tab.id, e.target.checked)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      disabled={tab.isLoading || !tab.response.role}
+                    />
                     <span>{tab.title}</span>
                     {tab.isLoading && (
                       <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    )}
+                    {selectedPrompts[tab.id] && (
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                     )}
                   </div>
                 </button>
@@ -727,7 +902,7 @@ const PromptGenerator: React.FC = () => {
                     <div className="space-y-4">
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                         <h4 className="text-blue-800 font-medium mb-2">🔍 功能模块预览</h4>
-                        <p className="text-blue-700 text-sm">仅显示核心功能模块，点击"最终版本"查看完整内容</p>
+                        <p className="text-blue-700 text-sm">仅显示核心功能模块，点击&quot;最终版本&quot;查看完整内容</p>
                       </div>
 
                       <div>
@@ -745,7 +920,7 @@ const PromptGenerator: React.FC = () => {
                           onClick={() => toggleFullContent(tab.id)}
                           className="text-green-600 hover:text-green-700 font-medium text-sm underline"
                         >
-                          点击"最终版本"查看角色、目标、UI要求等完整内容 →
+                          点击&quot;最终版本&quot;查看角色、目标、UI要求等完整内容 →
                         </button>
                       </div>
                     </div>
