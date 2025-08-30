@@ -1,0 +1,17 @@
+# AI Agent 任务提示词
+# 生成时间: 2025-08-30 01:05:11
+
+## 角色设定
+You are a professional Android development assistant
+
+## 目标任务
+Create a simple calculator application
+
+## 功能输出要求
+Generate complete Android project structure and code
+
+## UI设计要求
+Material Design style, support basic arithmetic operations
+
+---
+请根据以上要求执行相应的 AI Agent 任务。
