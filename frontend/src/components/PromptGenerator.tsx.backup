@@ -15,14 +15,14 @@ interface ThemeOption {
 const BUILT_IN_THEMES: ThemeOption[] = [
   {
     id: 'wifi_creative_checkin',
-    name: 'WiFi创意签到',
-    description: '无需WiFi实际功能、创意、结合签到功能',
+    name: 'WiFi-无功能',
+    description: '无需WiFi实际功能、创意功能',
     icon: '🌟'
   },
   {
     id: 'wifi_real_scanning',
     name: 'WiFi真实扫描',
-    description: '需要有WiFi实际功能、创意、不需要有签到功能',
+    description: '需要有WiFi实际功能、创意功能',
     icon: '📡'
   },
   {
@@ -32,21 +32,15 @@ const BUILT_IN_THEMES: ThemeOption[] = [
     icon: '🧹'
   },
   {
-    id: 'clean_creative_dream',
-    name: '清理梦境室',
-    description: '清理、不需要真实的清理功能、创意',
-    icon: '🌙'
-  },
-  {
     id: 'magnify_emotion',
-    name: '放大情绪镜',
+    name: '放大创意',
     description: '放大、无放大功能、创意',
     icon: '🔍'
   },
   {
     id: 'magnify_memory',
-    name: '放大回忆器',
-    description: '放大、无放大功能、创意',
+    name: '字体放大',
+    description: '放大、系统字体放大功能、创意',
     icon: '💭'
   },
   {
@@ -58,7 +52,7 @@ const BUILT_IN_THEMES: ThemeOption[] = [
   {
     id: 'traffic_creative_planet',
     name: '流量星球馆',
-    description: '流量、不需要真实流量功能、创意星球主题',
+    description: '流量、不需要真实流量功能、创意',
     icon: '🌌'
   }
 ]
