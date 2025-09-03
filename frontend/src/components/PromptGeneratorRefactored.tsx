@@ -126,11 +126,13 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
         const result = await generateDocument(i, tabCount, false);
         
         if (result) {
-          const targetTabId = initialTabs[i].id;
-          updateTab(targetTabId, {
-            response: result,
-            isLoading: false
-          });
+          const targetTabId = initialTabs[i]?.id;
+          if (targetTabId) {
+            updateTab(targetTabId, {
+              response: result,
+              isLoading: false
+            });
+          }
         }
       }
       

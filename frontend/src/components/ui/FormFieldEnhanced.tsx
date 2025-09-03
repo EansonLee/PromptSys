@@ -54,6 +54,7 @@ interface InputFormFieldProps extends BaseFormFieldProps {
   placeholder?: string;
   min?: number;
   max?: number;
+  readOnly?: boolean;
 }
 
 interface TextareaFormFieldProps extends BaseFormFieldProps {
@@ -82,7 +83,7 @@ const FormFieldEnhanced: React.FC<FormFieldProps> = (props) => {
   } = props;
 
   const inputClasses = `
-    w-full pl-12 pr-4 py-3 rounded-xl glass-input-enhanced text-glass-primary placeholder:text-glass-muted/80
+    w-full pl-12 pr-4 py-3 rounded-xl glass-input-enhanced text-black placeholder:text-gray-500
     transition-all duration-300 resize-none
     ${error && touched 
       ? 'border-red-400/50 focus:border-red-400 focus:ring-2 focus:ring-red-400/20' 
@@ -133,6 +134,7 @@ const FormFieldEnhanced: React.FC<FormFieldProps> = (props) => {
             placeholder={props.placeholder || `请输入${label}...`}
             min={props.min}
             max={props.max}
+            readOnly={props.readOnly}
             className={inputClasses}
             aria-invalid={error && touched ? 'true' : 'false'}
             aria-describedby={

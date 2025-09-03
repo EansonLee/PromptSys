@@ -294,6 +294,21 @@ a:focus-visible {
   border-radius: inherit;
 }
 
+.glass-premium-enhanced {
+  background: linear-gradient(135deg, 
+    rgba(240, 240, 240, 0.95) 0%, 
+    rgba(250, 250, 250, 0.98) 100%
+  );
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  position: relative;
+}
+
 .glass-premium-header {
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.25) 0%, 
@@ -438,6 +453,23 @@ a:focus-visible {
     rgba(59, 130, 246, 0.5), 
     rgba(147, 51, 234, 0.3) 50%, 
     rgba(236, 72, 153, 0.4)
+  );
+}
+
+.glass-input-enhanced[readonly] {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  cursor: default;
+  user-select: none;
+}
+
+.glass-input-enhanced[readonly]:hover {
+  transform: none;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.05) 100%
   );
 }
 
@@ -803,4 +835,74 @@ input[type="range"]:focus::-webkit-slider-thumb {
   .animate-pulse-glow {
     animation: none !important;
   }
+}
+
+/* React Colorful Custom Styles */
+.react-colorful-wrapper .react-colorful {
+  width: 100%;
+  max-width: 280px;
+  min-width: 240px;
+  height: 180px;
+}
+
+.react-colorful-wrapper .react-colorful__saturation {
+  border-radius: 12px 12px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: none;
+}
+
+.react-colorful-wrapper .react-colorful__hue {
+  height: 32px;
+  border-radius: 0 0 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: none;
+}
+
+.react-colorful-wrapper .react-colorful__alpha {
+  height: 32px;
+  border-radius: 0 0 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: none;
+}
+
+.react-colorful-wrapper .react-colorful__pointer {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.react-colorful-wrapper .react-colorful__hue-pointer,
+.react-colorful-wrapper .react-colorful__alpha-pointer {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.react-colorful-wrapper .react-colorful__pointer:hover,
+.react-colorful-wrapper .react-colorful__hue-pointer:hover,
+.react-colorful-wrapper .react-colorful__alpha-pointer:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* Interactive states for better UX */
+.react-colorful-wrapper .react-colorful__saturation:active,
+.react-colorful-wrapper .react-colorful__hue:active,
+.react-colorful-wrapper .react-colorful__alpha:active {
+  cursor: crosshair;
+}
+
+/* Glass effect for the color picker container */
+.react-colorful-wrapper {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }

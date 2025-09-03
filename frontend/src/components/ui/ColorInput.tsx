@@ -15,7 +15,6 @@ interface ColorInputProps {
   error?: string;
   touched?: boolean;
   required?: boolean;
-  placeholder?: string;
   helpText?: string;
   className?: string;
 }
@@ -83,8 +82,6 @@ const ColorInput: React.FC<ColorInputProps> = memo(({
     }
   }, [parsedColors.colors, name, onChange]);
 
-  // 增强的help文本，包含使用说明
-  const enhancedHelpText = helpText || '支持多种颜色格式：中文颜色名（如：蓝色、红色）、十六进制（如：#FF0000）、英文颜色名（如：red、blue）。多个颜色用"、"分隔';
 
   return (
     <div className={className}>
@@ -94,12 +91,13 @@ const ColorInput: React.FC<ColorInputProps> = memo(({
         name={name}
         type="text"
         value={value}
-        onChange={onChange}
+        onChange={() => {}} // 禁用手动输入
         error={error}
         touched={touched}
         required={required}
-        placeholder={placeholder || '例如：蓝色科技感、#FF0000、绿色'}
-        helpText={enhancedHelpText}
+        placeholder="请使用右侧取色按钮选择颜色"
+        helpText="点击右侧取色按钮打开颜色选择器，支持多次选择，选中的颜色将自动添加到此处"
+        readOnly={true}
       >
         {/* 颜色选择器触发按钮 */}
         <ColorPickerTrigger
@@ -114,9 +112,9 @@ const ColorInput: React.FC<ColorInputProps> = memo(({
         <div className="mt-3 space-y-3">
           {/* 圆点预览 */}
           <div className="flex items-center space-x-3">
-            <span className="text-sm font-medium text-glass-primary">颜色预览:</span>
+            <span className="text-sm font-medium text-black">颜色预览:</span>
             <ColorPreview
-              colors={parsedColors.colors}
+              colors={[...parsedColors.colors]}
               onColorRemove={handleColorRemove}
               size="md"
               showLabels={true}
@@ -125,9 +123,9 @@ const ColorInput: React.FC<ColorInputProps> = memo(({
 
           {/* 标签预览 */}
           <div className="space-y-2">
-            <span className="text-sm font-medium text-glass-primary">颜色标签:</span>
+            <span className="text-sm font-medium text-black">颜色标签:</span>
             <ColorTags
-              colors={parsedColors.colors}
+              colors={[...parsedColors.colors]}
               onColorRemove={handleColorRemove}
               maxDisplay={8}
             />
@@ -172,7 +170,7 @@ const ColorInput: React.FC<ColorInputProps> = memo(({
                 <li>• 特殊描述：蓝色科技感、绿色清新、紫色梦幻</li>
               </ul>
               <p className="text-xs text-blue-500 mt-2">
-                多个颜色请用"、"、","或空格分隔
+                多个颜色请用&ldquo;、&rdquo;、&ldquo;,&rdquo;或空格分隔
               </p>
             </div>
           </div>

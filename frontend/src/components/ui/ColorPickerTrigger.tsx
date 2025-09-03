@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, memo } from 'react';
-import ColorPickerPro from './ColorPickerPro';
+import ColorPickerReactColorful from './ColorPickerReactColorful';
 
 interface ColorPickerTriggerProps {
   onColorSelect: (color: string) => void;
@@ -57,7 +57,7 @@ const ColorPickerTrigger: React.FC<ColorPickerTriggerProps> = memo(({
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10 rounded-md"></div>
       </button>
 
-      <ColorPickerPro
+      <ColorPickerReactColorful
         isOpen={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}
         onColorSelect={handleColorSelect}

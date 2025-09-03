@@ -34,6 +34,7 @@ const ProgressVisualization: React.FC<ProgressVisualizationProps> = memo(({
       }, 1500);
       return () => clearTimeout(timer);
     }
+    return;
   }, [progressData.progress, progressData.step, onComplete])
   
   // 动画效果：让进度条平滑过渡

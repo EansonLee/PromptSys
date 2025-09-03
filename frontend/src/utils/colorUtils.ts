@@ -105,9 +105,9 @@ export function isValidRgbColor(color: string): boolean {
   if (!match) return false;
   
   const [, r, g, b] = match;
-  const red = parseInt(r, 10);
-  const green = parseInt(g, 10);
-  const blue = parseInt(b, 10);
+  const red = parseInt(r!, 10);
+  const green = parseInt(g!, 10);
+  const blue = parseInt(b!, 10);
   
   return red >= 0 && red <= 255 && green >= 0 && green <= 255 && blue >= 0 && blue <= 255;
 }
@@ -129,9 +129,9 @@ export function rgbToHex(r: number, g: number, b: number): string {
 export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
+    r: parseInt(result[1]!, 16),
+    g: parseInt(result[2]!, 16),
+    b: parseInt(result[3]!, 16)
   } : null;
 }
 
@@ -157,9 +157,9 @@ export function parseColor(input: string): ColorInfo {
     const match = trimmed.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/);
     if (match) {
       const [, r, g, b] = match;
-      const red = parseInt(r, 10);
-      const green = parseInt(g, 10);
-      const blue = parseInt(b, 10);
+      const red = parseInt(r!, 10);
+      const green = parseInt(g!, 10);
+      const blue = parseInt(b!, 10);
       return {
         original: input,
         hex: rgbToHex(red, green, blue),
