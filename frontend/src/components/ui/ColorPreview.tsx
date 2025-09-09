@@ -36,12 +36,12 @@ const ColorPreview: React.FC<ColorPreviewProps> = memo(({
       {validColors.map((color, index) => (
         <div
           key={index}
-          className="relative group"
+          className="relative group p-2"
           title={`${color.original} → ${color.hex}`}
         >
           {/* 颜色圆点 */}
           <div
-            className={`${sizeClasses[size]} rounded-full border-2 border-white/30 shadow-lg cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-xl relative overflow-hidden`}
+            className={`${sizeClasses[size]} rounded-full border-2 border-white/30 shadow-lg cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-xl relative`}
             style={getColorStyle(color.hex)}
           >
             {/* 光泽效果 */}
@@ -54,7 +54,7 @@ const ColorPreview: React.FC<ColorPreviewProps> = memo(({
                   e.stopPropagation();
                   onColorRemove(index);
                 }}
-                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center hover:bg-red-600"
+                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center hover:bg-red-600 z-10"
                 aria-label={`删除颜色 ${color.original}`}
               >
                 ×

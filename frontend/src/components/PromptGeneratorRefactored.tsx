@@ -19,6 +19,9 @@ interface PromptGeneratorProps {
 }
 
 const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className = '' }) => {
+  // 从环境变量读取配置
+  const showAIAgentActions = process.env.NEXT_PUBLIC_SHOW_AI_AGENT_ACTIONS === 'true';
+  
   const { isLoading, error, clearError, generateSinglePrompt, callAgentAction } = useAPI();
   const { 
     tabs, 
@@ -271,8 +274,8 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
           onTabCountChange={handleTabCountChange}
         />
 
-        {/* AI Agent Actions */}
-        {hasValidTabs && (
+        {/* AI Agent Actions - 条件渲染 */}
+        {hasValidTabs && showAIAgentActions && (
           <AIAgentActions
             onOpenClaudePage={handleOpenClaudePage}
             onGetRepository={handleGetRepository}

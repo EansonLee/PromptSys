@@ -110,7 +110,7 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
             onChange={onInputChange}
             error={errors.ui_color}
             touched={touched.ui_color}
-            placeholder="例如：蓝色科技感、#FF0000、绿色"
+            placeholder="例如：#FF0000、绿色、紫色梦幻"
             required
             helpText="支持中文颜色名、十六进制代码等多种格式，可选择多个颜色"
           />

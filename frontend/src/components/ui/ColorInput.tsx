@@ -167,7 +167,7 @@ const ColorInput: React.FC<ColorInputProps> = memo(({
                 <li>• 十六进制：#FF0000、#0066CC、#32CD32</li>
                 <li>• RGB格式：rgb(255,0,0)</li>
                 <li>• 英文颜色名：red、blue、green</li>
-                <li>• 特殊描述：蓝色科技感、绿色清新、紫色梦幻</li>
+                <li>• 特殊描述：绿色清新、紫色梦幻、橙色活力</li>
               </ul>
               <p className="text-xs text-blue-500 mt-2">
                 多个颜色请用&ldquo;、&rdquo;、&ldquo;,&rdquo;或空格分隔

@@ -49,7 +49,7 @@ export const DEFAULT_FORM_VALUES = {
   app_name: '',
   theme: '',
   variant_folder: '',
-  ui_color: '蓝色科技感',
+  ui_color: '',
   reference_file: '',
   tab_count: 3
 } as const;

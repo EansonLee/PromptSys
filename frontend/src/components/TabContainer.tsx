@@ -10,7 +10,7 @@ interface TabContainerProps {
   activeTabId: string | null;
   selectedTabIds: readonly string[];
   onTabSelect: (id: string) => void;
-  onTabPromptSelect: (id: string, selected: boolean) => void;
+  onTabPromptSelect: (id: string) => void;
   onRegenerateTab: (id: string) => void;
   children: (tab: TabDocument) => React.ReactNode;
 }
@@ -24,8 +24,8 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
   onRegenerateTab,
   children
 }) => {
-  const handlePromptSelection = useCallback((tabId: string, selected: boolean) => {
-    onTabPromptSelect(tabId, selected);
+  const handlePromptSelection = useCallback((tabId: string) => {
+    onTabPromptSelect(tabId);
   }, [onTabPromptSelect]);
 
   if (tabs.length === 0) {
@@ -48,7 +48,11 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
           {tabs.map((tab, index) => (
             <button
               key={tab.id}
-              onClick={() => onTabSelect(tab.id)}
+              onClick={() => {
+                onTabSelect(tab.id);
+                // Also select this tab when clicking on it
+                handlePromptSelection(tab.id);
+              }}
               className={`
                 flex-shrink-0 px-6 py-4 text-sm font-medium transition-all duration-300 relative group
                 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:ring-inset
@@ -73,16 +77,22 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
                     type="radio"
                     name="selectedPrompt"
                     checked={selectedTabIds.includes(tab.id)}
-                    onChange={(e) => handlePromptSelection(tab.id, e.target.checked)}
+                    onChange={() => handlePromptSelection(tab.id)}
                     className="sr-only"
                     disabled={tab.isLoading || !tab.response.role}
                     aria-label={`选择 ${tab.title} 作为提示词`}
                   />
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 cursor-pointer ${
-                    selectedTabIds.includes(tab.id)
-                      ? 'border-green-400 bg-green-400/20'
-                      : 'border-glass-border hover:border-blue-400'
-                  }`}>
+                  <div 
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                      selectedTabIds.includes(tab.id)
+                        ? 'border-green-400 bg-green-400/20'
+                        : 'border-glass-border hover:border-blue-400'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePromptSelection(tab.id);
+                    }}
+                  >
                     {selectedTabIds.includes(tab.id) && (
                       <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -115,11 +125,11 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
           <div
             key={tab.id}
             id={`tabpanel-${tab.id}`}
-            className={`p-8 transition-all duration-500 ${
+            className={`${
               activeTabId === tab.id 
-                ? 'block opacity-100 transform translate-y-0' 
-                : 'hidden opacity-0 transform translate-y-2'
-            }`}
+                ? 'block' 
+                : 'hidden'
+            } p-8 transition-all duration-500 ease-in-out`}
             role="tabpanel"
             aria-labelledby={`tab-${tab.id}`}
           >

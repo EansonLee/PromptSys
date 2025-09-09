@@ -12,6 +12,9 @@ export const FixedContentAppender: React.FC<Props> = ({ baseContent }) => {
   const [showFinal, setShowFinal] = useState(false)
   const [showEditor, setShowEditor] = useState(false)
   const [customFixedContent, setCustomFixedContent] = useState<string>(baseContent.fixed_content || '')
+  
+  // 从环境变量读取配置
+  const showGenerateTemplateButton = process.env.NEXT_PUBLIC_SHOW_GENERATE_TEMPLATE_BUTTON === 'true'
 
   // 当baseContent变化时更新固定内容
   useEffect(() => {
@@ -59,12 +62,14 @@ ${customFixedContent}`
           {showEditor ? '隐藏' : '查看/编辑'}固定内容
         </button>
         
-        <button
-          onClick={generateFinalContent}
-          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-        >
-          生成最终模板
-        </button>
+        {showGenerateTemplateButton && (
+          <button
+            onClick={generateFinalContent}
+            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+          >
+            生成最终模板
+          </button>
+        )}
         
         {showFinal && (
           <button
