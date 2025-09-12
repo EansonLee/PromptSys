@@ -34,6 +34,9 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
   onSubmit,
   onTabCountChange
 }) => {
+  // 从环境变量读取隐藏配置
+  const showVariantAndReferenceFields = process.env.NEXT_PUBLIC_SHOW_VARIANT_AND_REFERENCE_FIELDS === 'true';
+  
   const handleTabCountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1));
     onTabCountChange(value);
@@ -88,19 +91,21 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
             />
           </div>
 
-          {/* Variant Folder */}
-          <FormFieldEnhanced
-            label="变体文件夹"
-            name="variant_folder"
-            type="text"
-            value={formData.variant_folder}
-            onChange={onInputChange}
-            error={errors.variant_folder}
-            touched={touched.variant_folder}
-            placeholder="例如：variant_traffic137630"
-            required
-            helpText="只能包含字母、数字和下划线"
-          />
+          {/* Variant Folder - 条件显示 */}
+          {showVariantAndReferenceFields && (
+            <FormFieldEnhanced
+              label="变体文件夹"
+              name="variant_folder"
+              type="text"
+              value={formData.variant_folder}
+              onChange={onInputChange}
+              error={errors.variant_folder}
+              touched={touched.variant_folder}
+              placeholder="例如：variant_traffic137630"
+              required
+              helpText="只能包含字母、数字和下划线"
+            />
+          )}
 
           {/* UI Color with Enhanced Input */}
           <ColorInput
@@ -115,16 +120,18 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
             helpText="支持中文颜色名、十六进制代码等多种格式，可选择多个颜色"
           />
 
-          {/* Reference File */}
-          <FormFieldEnhanced
-            label="参考文件"
-            name="reference_file"
-            type="text"
-            value={formData.reference_file || ''}
-            onChange={onInputChange}
-            placeholder="例如：HomeFragment（自动添加@前缀和.kt后缀）"
-            helpText="输入文件名（如 HomeFragment），系统会自动格式化为 @HomeFragment.kt"
-          />
+          {/* Reference File - 条件显示 */}
+          {showVariantAndReferenceFields && (
+            <FormFieldEnhanced
+              label="参考文件"
+              name="reference_file"
+              type="text"
+              value={formData.reference_file || ''}
+              onChange={onInputChange}
+              placeholder="例如：HomeFragment（自动添加@前缀和.kt后缀）"
+              helpText="输入文件名（如 HomeFragment），系统会自动格式化为 @HomeFragment.kt"
+            />
+          )}
 
           {/* Tab Count */}
           <FormFieldEnhanced

@@ -52,7 +52,7 @@ export const DEFAULT_FORM_VALUES = {
   ui_color: '',
   reference_file: '',
   tab_count: 3
-} as const;
+};
 
 export const VALIDATION_RULES = {
   app_name: {

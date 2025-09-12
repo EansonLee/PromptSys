@@ -46,7 +46,9 @@
       "mcp__context7__get-library-docs",
       "Bash(rd:*)",
       "Bash(wmic process where processid=17992 delete:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "additionalDirectories": [

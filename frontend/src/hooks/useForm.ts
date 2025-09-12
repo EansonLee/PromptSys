@@ -59,10 +59,25 @@ function validateField(field: keyof PromptRequest, value: any): string | undefin
 }
 
 export function useForm(initialValues: Partial<PromptRequest> = {}): UseFormReturn {
-  const [formData, setFormData] = useState<PromptRequest>({
-    ...DEFAULT_FORM_VALUES,
+  // 检查是否隐藏变体和参考文件字段
+  const showVariantAndReferenceFields = process.env.NEXT_PUBLIC_SHOW_VARIANT_AND_REFERENCE_FIELDS === 'true';
+  
+  // 为隐藏字段提供默认值
+  const getDefaultValues = useCallback((): PromptRequest => {
+    const defaults = { ...DEFAULT_FORM_VALUES };
+    
+    if (!showVariantAndReferenceFields) {
+      defaults.variant_folder = 'variant_default';
+      defaults.reference_file = 'MainActivity';
+    }
+    
+    return defaults;
+  }, [showVariantAndReferenceFields]);
+
+  const [formData, setFormData] = useState<PromptRequest>(() => ({
+    ...getDefaultValues(),
     ...initialValues
-  });
+  }));
   
   const [touched, setTouched] = useState<FormTouched>({});
 
@@ -82,11 +97,17 @@ export function useForm(initialValues: Partial<PromptRequest> = {}): UseFormRetu
   }, [formData, touched]);
 
   const isValid = useMemo(() => {
-    return Object.keys(errors).length === 0 && 
-           formData.app_name.trim() !== '' && 
-           formData.theme.trim() !== '' && 
-           formData.variant_folder.trim() !== '';
-  }, [errors, formData]);
+    const hasErrors = Object.keys(errors).length === 0;
+    const hasRequiredFields = formData.app_name.trim() !== '' && 
+                               formData.theme.trim() !== '';
+    
+    // 如果显示变体文件夹字段，则需要验证
+    const hasVariantFolder = showVariantAndReferenceFields 
+      ? formData.variant_folder.trim() !== '' 
+      : true; // 隐藏时不需要验证用户输入
+    
+    return hasErrors && hasRequiredFields && hasVariantFolder;
+  }, [errors, formData, showVariantAndReferenceFields]);
 
   const handleInputChange = useCallback<InputChangeHandler>((event) => {
     const { name, value, type } = event.target;
@@ -133,9 +154,9 @@ export function useForm(initialValues: Partial<PromptRequest> = {}): UseFormRetu
   }, [formData, isValid]);
 
   const resetForm = useCallback(() => {
-    setFormData({ ...DEFAULT_FORM_VALUES, ...initialValues });
+    setFormData({ ...getDefaultValues(), ...initialValues });
     setTouched({});
-  }, [initialValues]);
+  }, [initialValues, getDefaultValues]);
 
   const touchField = useCallback((field: keyof PromptRequest) => {
     setTouched(prev => ({ ...prev, [field]: true }));
