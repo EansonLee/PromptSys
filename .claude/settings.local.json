@@ -36,20 +36,17 @@
       "Bash(copy:*)",
       "Read(C:\\Users/**)",
       "Read(c:\\Users\\宜蓁同学\\Downloads/**)",
-      "Read(c:\\Users\\宜蓁同学\\Downloads/**)",
-      "Read(c:\\Users\\宜蓁同学\\Downloads/**)",
       "Bash(where python)",
       "Bash(C:UsersxmilesAppDataLocalProgramsPythonPython312python.exe -m pip install requests)",
       "Bash(\"C:\\Users\\xmiles\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" -m pip install requests)",
       "Bash(\"C:\\Users\\xmiles\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" test_gitlab_integration.py)",
       "Bash(\"C:\\Users\\xmiles\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" -m pip install python-dotenv)",
       "Bash(\"C:\\Users\\xmiles\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" debug_ssh_key.py)",
-      "Read(c:\\Users\\宜蓁同学\\Downloads/**)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__get-library-docs",
       "Bash(rd:*)",
-      "Read(c:\\Users\\宜蓁同学\\Downloads/**)",
-      "Read(c:\\Users\\宜蓁同学\\Downloads/**)"
+      "Bash(wmic process where processid=17992 delete:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "additionalDirectories": [
