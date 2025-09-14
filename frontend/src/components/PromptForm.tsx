@@ -29,6 +29,9 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
   onSubmit,
   onTabCountChange
 }) => {
+  // 从环境变量读取隐藏配置
+  const showVariantAndReferenceFields = process.env.NEXT_PUBLIC_SHOW_VARIANT_AND_REFERENCE_FIELDS === 'true';
+
   const {
     register,
     handleSubmit,
@@ -103,16 +106,18 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
             />
           </div>
 
-          {/* Variant Folder */}
-          <EnhancedTextInput
-            label="变体文件夹"
-            name="variant_folder"
-            placeholder="例如：variant_traffic137630"
-            required
-            helpText="只能包含字母、数字和下划线"
-            registration={register('variant_folder', validationRules.variant_folder)}
-            error={errors.variant_folder}
-          />
+          {/* Variant Folder - 条件显示 */}
+          {showVariantAndReferenceFields && (
+            <EnhancedTextInput
+              label="变体文件夹"
+              name="variant_folder"
+              placeholder="例如：variant_traffic137630"
+              required
+              helpText="只能包含字母、数字和下划线"
+              registration={register('variant_folder', validationRules.variant_folder)}
+              error={errors.variant_folder}
+            />
+          )}
 
           {/* UI Color with Enhanced Input - Keep unchanged as requested */}
           <ColorInput
@@ -125,15 +130,17 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
             helpText="支持中文颜色名、十六进制代码等多种格式，可选择多个颜色"
           />
 
-          {/* Reference File */}
-          <EnhancedTextInput
-            label="参考文件"
-            name="reference_file"
-            placeholder="例如：HomeFragment（自动添加@前缀和.kt后缀）"
-            helpText="输入文件名（如 HomeFragment），系统会自动格式化为 @HomeFragment.kt"
-            registration={register('reference_file', validationRules.reference_file)}
-            error={errors.reference_file}
-          />
+          {/* Reference File - 条件显示 */}
+          {showVariantAndReferenceFields && (
+            <EnhancedTextInput
+              label="参考文件"
+              name="reference_file"
+              placeholder="例如：HomeFragment（自动添加@前缀和.kt后缀）"
+              helpText="输入文件名（如 HomeFragment），系统会自动格式化为 @HomeFragment.kt"
+              registration={register('reference_file', validationRules.reference_file)}
+              error={errors.reference_file}
+            />
+          )}
 
           {/* Tab Count - Keep unchanged as requested */}
           <FormFieldEnhanced

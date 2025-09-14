@@ -22,13 +22,13 @@ export const BUILT_IN_THEMES: readonly ThemeOption[] = [
   {
     id: 'magnify_emotion',
     name: '放大创意',
-    description: '放大、无放大功能、创意',
+    description: '无实际放大功能、创意',
     icon: '🔍'
   },
   {
     id: 'magnify_memory',
     name: '字体放大',
-    description: '放大、系统字体放大功能、创意',
+    description: '系统字体放大功能、创意',
     icon: '💭'
   },
   {
@@ -52,7 +52,7 @@ export const DEFAULT_FORM_VALUES = {
   ui_color: '',
   reference_file: '',
   tab_count: 3
-} as const;
+};
 
 export const VALIDATION_RULES = {
   app_name: {
