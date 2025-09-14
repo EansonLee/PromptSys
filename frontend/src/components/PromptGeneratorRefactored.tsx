@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, startTransition, useDeferredValue } from 'react';
-import type { PromptResponse, ThemeOption, ProgressData } from '@/types';
+import type { PromptRequest, PromptResponse, ThemeOption, ProgressData } from '@/types';
 import { useAPI } from '@/hooks/useAPI';
 import { useTabs } from '@/hooks/useTabs';
 import { useForm } from '@/hooks/useForm';
@@ -158,10 +158,13 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
   }, [validateForm, formData.tab_count, clearTabs, initializeTabs, generateDocument, updateTab]);
 
   // Form submit handler
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(async (data: PromptRequest) => {
+    // Update form data with validated data from React Hook Form
+    Object.entries(data).forEach(([key, value]) => {
+      setFieldValue(key as keyof PromptRequest, value);
+    });
     await handleBatchGeneration();
-  }, [handleBatchGeneration]);
+  }, [handleBatchGeneration, setFieldValue]);
 
   // Tab regeneration handler
   const handleRegenerateTab = useCallback(async (tabId: string) => {
@@ -263,12 +266,8 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
         {/* Input Form */}
         <PromptForm
           formData={deferredFormData}
-          errors={errors}
-          touched={touched}
-          isValid={isValid}
           isLoading={isLoading}
           error={error}
-          onInputChange={handleInputChange}
           onThemeSelect={handleThemeSelect}
           onSubmit={handleSubmit}
           onTabCountChange={handleTabCountChange}
