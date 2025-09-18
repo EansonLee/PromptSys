@@ -15,7 +15,7 @@ import subprocess
 import re
 
 # GUI 自动化库
-try:
+try: 
     import pyautogui
     import pyperclip
     import psutil
