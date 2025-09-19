@@ -1,7 +1,7 @@
 'use client'
 
 import React, { memo } from 'react';
-import type { ColorInfo } from '@/utils/colorUtils';
+import type { ColorInfo } from '@/types';
 import { getColorStyle, isDarkColor } from '@/utils/colorUtils';
 
 interface ColorPreviewProps {

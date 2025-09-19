@@ -90,7 +90,7 @@ const ProgressVisualization: React.FC<ProgressVisualizationProps> = memo(({
         {/* 标题 */}
         <div className="text-center mb-10">
           <h3 className="text-3xl font-bold progress-modal-text mb-4 flex items-center justify-center space-x-3">
-            <div className="w-4 h-4 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse-glow"></div>
+            <div className="w-4 h-4 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse-gentle"></div>
             <span>正在生成提示词</span>
           </h3>
           <p className="progress-modal-text-secondary text-lg">请稍等，AI正在为您创建精彩内容...</p>
@@ -138,7 +138,7 @@ const ProgressVisualization: React.FC<ProgressVisualizationProps> = memo(({
                 <span className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                   {Math.round(animatedProgress)}%
                 </span>
-                <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto mt-2 animate-pulse-glow"></div>
+                <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto mt-2 animate-pulse-gentle"></div>
               </div>
             </div>
             
@@ -154,7 +154,7 @@ const ProgressVisualization: React.FC<ProgressVisualizationProps> = memo(({
               className={`h-full transition-all duration-500 ease-out ${getStepColor(progressData.step)} relative overflow-hidden`}
               style={{ width: `${animatedProgress}%` }}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50"></div>
             </div>
           </div>
         </div>
@@ -162,7 +162,7 @@ const ProgressVisualization: React.FC<ProgressVisualizationProps> = memo(({
         {/* 状态信息 */}
         <div className="text-center space-y-4 mb-8">
           <div className="flex items-center justify-center space-x-3">
-            <div className={`w-4 h-4 rounded-full animate-pulse-glow ${getStepColor(progressData.step).replace('bg-gradient-to-r', 'bg-gradient-to-br')}`}></div>
+            <div className={`w-4 h-4 rounded-full animate-pulse-gentle ${getStepColor(progressData.step).replace('bg-gradient-to-r', 'bg-gradient-to-br')}`}></div>
             <span className="text-lg font-bold progress-modal-text">{progressData.step}</span>
           </div>
           <p className="progress-modal-text-secondary font-medium text-lg">{progressData.status}</p>
@@ -172,7 +172,7 @@ const ProgressVisualization: React.FC<ProgressVisualizationProps> = memo(({
         <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
           <div className="flex justify-between items-center text-sm">
             <div className={`flex flex-col items-center transition-all duration-300 ${progressData.progress >= 10 ? 'text-blue-400' : 'progress-modal-text-secondary'}`}>
-              <div className={`w-3 h-3 rounded-full mb-2 transition-all duration-300 ${progressData.progress >= 10 ? 'bg-blue-400 animate-pulse-glow' : 'bg-white/20'}`}></div>
+              <div className={`w-3 h-3 rounded-full mb-2 transition-all duration-300 ${progressData.progress >= 10 ? 'bg-blue-400 animate-pulse-gentle' : 'bg-white/20'}`}></div>
               <span className="font-medium">验证</span>
             </div>
             
@@ -184,7 +184,7 @@ const ProgressVisualization: React.FC<ProgressVisualizationProps> = memo(({
             </div>
             
             <div className={`flex flex-col items-center transition-all duration-300 ${progressData.progress >= 30 ? 'text-purple-400' : 'progress-modal-text-secondary'}`}>
-              <div className={`w-3 h-3 rounded-full mb-2 transition-all duration-300 ${progressData.progress >= 30 ? 'bg-purple-400 animate-pulse-glow' : 'bg-white/20'}`}></div>
+              <div className={`w-3 h-3 rounded-full mb-2 transition-all duration-300 ${progressData.progress >= 30 ? 'bg-purple-400 animate-pulse-gentle' : 'bg-white/20'}`}></div>
               <span className="font-medium">生成</span>
             </div>
             
@@ -196,7 +196,7 @@ const ProgressVisualization: React.FC<ProgressVisualizationProps> = memo(({
             </div>
             
             <div className={`flex flex-col items-center transition-all duration-300 ${progressData.progress >= 85 ? 'text-orange-400' : 'progress-modal-text-secondary'}`}>
-              <div className={`w-3 h-3 rounded-full mb-2 transition-all duration-300 ${progressData.progress >= 85 ? 'bg-orange-400 animate-pulse-glow' : 'bg-white/20'}`}></div>
+              <div className={`w-3 h-3 rounded-full mb-2 transition-all duration-300 ${progressData.progress >= 85 ? 'bg-orange-400 animate-pulse-gentle' : 'bg-white/20'}`}></div>
               <span className="font-medium">解析</span>
             </div>
             
@@ -208,7 +208,7 @@ const ProgressVisualization: React.FC<ProgressVisualizationProps> = memo(({
             </div>
             
             <div className={`flex flex-col items-center transition-all duration-300 ${progressData.progress >= 100 ? 'text-emerald-400' : 'progress-modal-text-secondary'}`}>
-              <div className={`w-3 h-3 rounded-full mb-2 transition-all duration-300 ${progressData.progress >= 100 ? 'bg-emerald-400 animate-pulse-glow' : 'bg-white/20'}`}></div>
+              <div className={`w-3 h-3 rounded-full mb-2 transition-all duration-300 ${progressData.progress >= 100 ? 'bg-emerald-400 animate-pulse-gentle' : 'bg-white/20'}`}></div>
               <span className="font-medium">完成</span>
             </div>
           </div>

@@ -3,7 +3,6 @@
 import React, { memo, useCallback } from 'react';
 import type { TabDocument } from '@/types';
 import Button from './ui/Button';
-import LoadingSpinner from './ui/LoadingSpinner';
 
 interface TabContainerProps {
   tabs: readonly TabDocument[];
@@ -14,6 +13,22 @@ interface TabContainerProps {
   onRegenerateTab: (id: string) => void;
   children: (tab: TabDocument) => React.ReactNode;
 }
+
+// Inlined LoadingSpinner component
+const LoadingSpinner: React.FC<{size?: 'sm' | 'md' | 'lg', className?: string}> = ({ size = 'md', className = '' }) => {
+  const sizeClasses = { sm: 'w-5 h-5', md: 'w-7 h-7', lg: 'w-10 h-10' };
+  return (
+    <div className={`${sizeClasses[size]} relative ${className}`} role="status" aria-label="加载中">
+      <div className={`${sizeClasses[size]} rounded-full border-2 border-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 animate-spin`}>
+        <div className={`${sizeClasses[size]} rounded-full bg-transparent border-2 border-transparent`} style={{
+          background: 'conic-gradient(transparent, transparent, transparent, rgba(255,255,255,0.3))'
+        }}></div>
+      </div>
+      <div className={`absolute inset-0 ${sizeClasses[size]} rounded-full bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 blur-sm animate-pulse-gentle`}></div>
+      <span className="sr-only">加载中...</span>
+    </div>
+  );
+};
 
 const TabContainer: React.FC<TabContainerProps> = memo(({
   tabs,
@@ -38,7 +53,7 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
       <div className="border-b border-white/20 relative">
         <div className="glass-secondary rounded-t-2xl p-6 pb-4">
           <h2 className="text-2xl font-bold text-glass-primary flex items-center space-x-3">
-            <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse-glow"></div>
+            <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse-gentle"></div>
             <span>生成结果</span>
           </h2>
         </div>
@@ -68,7 +83,7 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
             >
               {/* Tab active indicator */}
               {activeTabId === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-full animate-shimmer"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-full"></div>
               )}
               
               <div className="flex items-center space-x-3 relative z-10">
@@ -104,11 +119,11 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
                 <span className="font-semibold">{tab.title}</span>
                 
                 {tab.isLoading && (
-                  <LoadingSpinner size="sm" color="text-blue-400" />
+                  <LoadingSpinner size="sm" />
                 )}
                 
                 {selectedTabIds.includes(tab.id) && !tab.isLoading && (
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse-glow"></div>
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse-gentle"></div>
                 )}
               </div>
               
@@ -153,7 +168,7 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
                 {/* Action buttons */}
                 <div className="flex justify-end items-center gap-4">
                   <div className="glass-tertiary rounded-xl p-3 flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse-glow"></div>
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse-gentle"></div>
                     <span className="text-glass-secondary text-sm font-medium">生成完成</span>
                   </div>
                   <Button

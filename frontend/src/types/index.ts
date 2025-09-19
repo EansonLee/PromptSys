@@ -69,24 +69,7 @@ export interface ThemeOption {
   readonly icon: string;
 }
 
-// Form and Validation Types
-export interface FormErrors {
-  app_name?: string;
-  theme?: string;
-  variant_folder?: string;
-  ui_color?: string;
-  reference_file?: string;
-  tab_count?: string;
-}
-
-export interface FormTouched {
-  app_name?: boolean;
-  theme?: boolean;
-  variant_folder?: boolean;
-  ui_color?: boolean;
-  reference_file?: boolean;
-  tab_count?: boolean;
-}
+// Form validation types removed - using react-hook-form instead
 
 // API Error Types
 export interface APIError {
@@ -95,44 +78,9 @@ export interface APIError {
   readonly code?: string;
 }
 
-// Hook Return Types
-export interface UsePromptGeneratorReturn {
-  readonly formData: PromptRequest;
-  readonly setFormData: React.Dispatch<React.SetStateAction<PromptRequest>>;
-  readonly isLoading: boolean;
-  readonly error: string | null;
-  readonly generatePrompt: (data: PromptRequest) => Promise<void>;
-  readonly generateBatch: (data: PromptRequest) => Promise<void>;
-}
+// Hook return types moved to respective hook files for better locality
 
-export interface UseTabsReturn {
-  readonly tabs: readonly TabDocument[];
-  readonly activeTab: string | null;
-  readonly setActiveTab: (id: string) => void;
-  readonly addTab: (tab: TabDocument) => void;
-  readonly updateTab: (id: string, updates: Partial<TabDocument>) => void;
-  readonly removeTab: (id: string) => void;
-  readonly clearTabs: () => void;
-}
-
-// Event Handler Types
-export type InputChangeHandler = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-export type ButtonClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => void;
-export type FormSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => void;
-
-// Constants and Enums
-export const THEME_TYPES = {
-  WIFI_CREATIVE: 'wifi_creative_checkin',
-  WIFI_SCANNING: 'wifi_real_scanning',
-  CLEAN_CREATIVE: 'clean_creative_ball',
-  MAGNIFY_EMOTION: 'magnify_emotion',
-  MAGNIFY_MEMORY: 'magnify_memory',
-  TRAFFIC_MONITOR: 'traffic_real_monitor',
-  TRAFFIC_PLANET: 'traffic_creative_planet',
-  DEFAULT: 'default'
-} as const;
-
-export type ThemeType = typeof THEME_TYPES[keyof typeof THEME_TYPES];
+// Constants moved to constants/themes.ts for better organization
 
 // Color-related Types
 export interface ColorInfo {
@@ -143,9 +91,9 @@ export interface ColorInfo {
 }
 
 export interface ParsedColors {
-  readonly colors: readonly ColorInfo[];
-  readonly hasValidColors: boolean;
-  readonly invalidInputs: readonly string[];
+  colors: ColorInfo[];
+  hasValidColors: boolean;
+  invalidInputs: string[];
 }
 
 export interface ColorPickerState {

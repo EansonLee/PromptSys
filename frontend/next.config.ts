@@ -7,9 +7,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  experimental: {
-    optimizePackageImports: ['@/components', '@/hooks', '@/utils'],
-  },
+  // experimental: {
+  //   optimizePackageImports: ['@/components', '@/hooks', '@/utils'],
+  // },
 };
 
 export default nextConfig;

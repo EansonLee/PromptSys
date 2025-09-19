@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { PromptRequest, PromptResponse, ProgressData, APIError } from '@/types';
+import type { PromptRequest, PromptResponse, ProgressData } from '@/types';
 
 export interface UseAPIReturn {
   isLoading: boolean;

@@ -67,7 +67,7 @@ export const validateForm = (data: PromptRequest): ValidationResult => {
   };
 };
 
-// Field-specific validation rules for React Hook Form
+// Unified validation rules for React Hook Form - consolidated from themes.ts
 export const validationRules = {
   app_name: {
     required: 'APP名称不能为空',

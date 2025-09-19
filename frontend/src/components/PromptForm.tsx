@@ -4,9 +4,7 @@ import React, { memo, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import type { PromptRequest, ThemeOption } from '@/types';
 import { validationRules } from '@/utils/formValidation';
-import EnhancedTextInput from './ui/EnhancedTextInput';
-import EnhancedTextarea from './ui/EnhancedTextarea';
-import FormFieldEnhanced from './ui/FormFieldEnhanced';
+import FormFieldSimple from './ui/FormFieldSimple';
 import ColorInput from './ui/ColorInput';
 import Button from './ui/Button';
 import Card from './ui/Card';
@@ -62,7 +60,7 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
     register('ui_color', validationRules.ui_color);
   }, [register]);
 
-  const handleFormSubmit = handleSubmit((data) => {
+  const handleFormSubmit = handleSubmit((data: PromptRequest) => {
     onSubmit(data);
   });
 
@@ -70,7 +68,7 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
     <Card className="animate-scale-in">
       <Card.Header>
         <div className="flex items-center space-x-3">
-          <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse-glow"></div>
+          <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse-gentle"></div>
           <h2 className="text-2xl font-bold text-glass-primary">输入参数</h2>
         </div>
       </Card.Header>
@@ -78,7 +76,7 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
       <Card.Content>
         <form onSubmit={handleFormSubmit} className="space-y-6" noValidate>
           {/* App Name */}
-          <EnhancedTextInput
+          <FormFieldSimple
             label="APP 名称"
             name="app_name"
             placeholder="例如：免费流量直达"
@@ -89,7 +87,7 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
 
           {/* Theme */}
           <div className="space-y-4">
-            <EnhancedTextarea
+            <FormFieldSimple
               label="主题"
               name="theme"
               placeholder="例如：流量星球馆，通过读取真实流量数据，映射为星球能量值"
@@ -108,7 +106,7 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
 
           {/* Variant Folder - 条件显示 */}
           {showVariantAndReferenceFields && (
-            <EnhancedTextInput
+            <FormFieldSimple
               label="变体文件夹"
               name="variant_folder"
               placeholder="例如：variant_traffic137630"
@@ -132,7 +130,7 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
 
           {/* Reference File - 条件显示 */}
           {showVariantAndReferenceFields && (
-            <EnhancedTextInput
+            <FormFieldSimple
               label="参考文件"
               name="reference_file"
               placeholder="例如：HomeFragment（自动添加@前缀和.kt后缀）"
@@ -142,18 +140,24 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
             />
           )}
 
-          {/* Tab Count - Keep unchanged as requested */}
-          <FormFieldEnhanced
-            label="生成Tab数量"
-            name="tab_count"
-            type="number"
-            value={watch('tab_count') || 3}
-            onChange={handleTabCountChange}
-            min={1}
-            max={10}
-            placeholder="3"
-            helpText="一次生成多个不同版本的提示词文档（1-10个）"
-          />
+          {/* Tab Count - Legacy FormField for now */}
+          <div className="relative group">
+            <label className="block text-sm font-semibold text-glass-primary mb-3">
+              生成Tab数量
+            </label>
+            <input
+              type="number"
+              value={watch('tab_count') || 3}
+              onChange={handleTabCountChange}
+              min={1}
+              max={10}
+              placeholder="3"
+              className="w-full px-4 py-3 rounded-xl glass-input-enhanced text-black placeholder:text-gray-500 transition-all duration-300"
+            />
+            <p className="mt-2 text-sm text-glass-muted">
+              一次生成多个不同版本的提示词文档（1-10个）
+            </p>
+          </div>
 
           {/* Submit Button */}
           <Button

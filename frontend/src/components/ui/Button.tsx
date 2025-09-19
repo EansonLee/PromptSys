@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react';
-import LoadingSpinner from './LoadingSpinner';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'success';
@@ -48,11 +47,7 @@ const Button: React.FC<ButtonProps> = ({
       {/* Button content */}
       <div className="relative z-10 flex items-center justify-center">
         {loading && (
-          <LoadingSpinner 
-            size="sm" 
-            color="text-current"
-            className="mr-2" 
-          />
+          <div className="mr-2 w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
         )}
         {!loading && icon && (
           <span className="mr-2 group-hover:scale-110 transition-transform duration-200">{icon}</span>

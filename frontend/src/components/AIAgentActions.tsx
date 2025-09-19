@@ -1,7 +1,6 @@
 'use client'
 
 import React, { memo } from 'react';
-import Button from './ui/Button';
 import Card from './ui/Card';
 
 interface AIAgentActionsProps {

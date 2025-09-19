@@ -1,17 +1,5 @@
 // 颜色处理工具函数
-
-export interface ColorInfo {
-  original: string;    // 原始输入
-  hex: string;        // 十六进制格式
-  rgb: string;        // RGB格式
-  isValid: boolean;   // 是否是有效颜色
-}
-
-export interface ParsedColors {
-  colors: ColorInfo[];
-  hasValidColors: boolean;
-  invalidInputs: string[];
-}
+import type { ColorInfo, ParsedColors } from '@/types';
 
 // 中文颜色名映射到十六进制
 const CHINESE_COLORS: Record<string, string> = {

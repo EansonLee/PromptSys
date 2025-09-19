@@ -1,16 +1,15 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, startTransition, useDeferredValue } from 'react';
-import type { PromptRequest, PromptResponse, ThemeOption, ProgressData } from '@/types';
+import React, { useCallback, useEffect, useMemo, useDeferredValue } from 'react';
+import type { PromptRequest, ProgressData } from '@/types';
 import { useAPI } from '@/hooks/useAPI';
 import { useTabs } from '@/hooks/useTabs';
-import { useForm } from '@/hooks/useForm';
 import { API_ENDPOINTS } from '@/constants/themes';
 
 import PromptForm from './PromptForm';
 import TabContainer from './TabContainer';
 import ContentViewer from './ContentViewer';
-import AIAgentActions from './AIAgentActions';
+const AIAgentActions = React.lazy(() => import('./AIAgentActions'));
 import { ProgressVisualization } from './ProgressVisualization';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -19,29 +18,39 @@ interface PromptGeneratorProps {
 }
 
 const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className = '' }) => {
-  // 从环境变量读取配置
-  const showAIAgentActions = process.env.NEXT_PUBLIC_SHOW_AI_AGENT_ACTIONS === 'true';
+  // 从环境变量读取配置（memoized）
+  const showAIAgentActions = useMemo(() =>
+    process.env.NEXT_PUBLIC_SHOW_AI_AGENT_ACTIONS === 'true', []);
   
   const { isLoading, error, clearError, generateSinglePrompt, callAgentAction } = useAPI();
-  const { 
-    tabs, 
-    activeTabId, 
-    selectedTabIds, 
-    setActiveTab, 
-    selectSingleTab, 
-    updateTab, 
-    clearTabs, 
-    initializeTabs 
-  } = useTabs();
   const {
-    formData,
-    errors,
-    touched,
-    isValid,
-    handleInputChange,
-    setFieldValue,
-    validateForm
-  } = useForm();
+    tabs,
+    activeTabId,
+    selectedTabIds,
+    setActiveTab,
+    selectSingleTab,
+    updateTab,
+    clearTabs,
+    initializeTabs
+  } = useTabs();
+
+  // 简化的状态管理 - PromptForm组件现在完全使用react-hook-form
+  // 检查是否隐藏变体和参考文件字段（memoized）
+  const showVariantAndReferenceFields = useMemo(() =>
+    process.env.NEXT_PUBLIC_SHOW_VARIANT_AND_REFERENCE_FIELDS === 'true', []);
+
+  // 只保留默认值常量，不需要状态管理
+  const defaultFormData = React.useMemo(() => ({
+    app_name: '',
+    theme: '',
+    variant_folder: showVariantAndReferenceFields ? '' : 'variant_default',
+    ui_color: '',
+    reference_file: showVariantAndReferenceFields ? '' : 'MainActivity',
+    tab_count: 3
+  }), [showVariantAndReferenceFields]);
+
+  // 存储最后提交的表单数据，用于重新生成
+  const [lastSubmittedData, setLastSubmittedData] = React.useState<PromptRequest | null>(null);
 
   // Progress tracking
   const [showProgress, setShowProgress] = React.useState(false);
@@ -51,26 +60,21 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
     step: '初始化'
   });
 
-  // Clear error when form data changes
+  // 清理错误状态
   useEffect(() => {
     if (error) {
       clearError();
     }
-  }, [formData, clearError, error]);
+  }, [clearError, error]);
 
-  // Theme selection handler
-  const handleThemeSelect = useCallback((theme: ThemeOption) => {
-    startTransition(() => {
-      setFieldValue('theme', theme.description);
-    });
-  }, [setFieldValue]);
+  // 简化的事件处理器 - 不再需要状态同步
+  const handleThemeSelect = useCallback(() => {
+    // 主题选择现在直接在PromptForm中处理
+  }, []);
 
-  // Tab count change handler
-  const handleTabCountChange = useCallback((count: number) => {
-    startTransition(() => {
-      setFieldValue('tab_count', count);
-    });
-  }, [setFieldValue]);
+  const handleTabCountChange = useCallback(() => {
+    // Tab数量变化现在直接在PromptForm中处理
+  }, []);
 
   // Progress handler
   const handleProgress = useCallback((data: ProgressData, documentIndex: number, total: number, isRegeneration: boolean) => {
@@ -97,37 +101,37 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
     });
   }, []);
 
-  // Generate single document
-  const generateDocument = useCallback(async (
-    documentIndex: number, 
-    total: number = 1, 
-    isRegeneration: boolean = false
-  ): Promise<PromptResponse | null> => {
-    return generateSinglePrompt(
-      formData,
-      (data) => handleProgress(data, documentIndex, total, isRegeneration)
-    );
-  }, [formData, generateSinglePrompt, handleProgress]);
 
-  // Batch generation handler
-  const handleBatchGeneration = useCallback(async () => {
-    if (!validateForm()) {
-      return;
-    }
 
-    const tabCount = formData.tab_count || 1;
-    
+  // Form submit handler
+  const handleSubmit = useCallback(async (data: PromptRequest) => {
+    // 确保隐藏字段有默认值
+    const processedData: PromptRequest = {
+      ...data,
+      variant_folder: showVariantAndReferenceFields ? data.variant_folder : 'variant_default',
+      reference_file: showVariantAndReferenceFields ? data.reference_file : 'MainActivity'
+    };
+
+    // 保存最后提交的数据用于重新生成
+    setLastSubmittedData(processedData);
+
+    // 直接使用处理后的数据执行生成
+    const tabCount = processedData.tab_count || 1;
+
     setShowProgress(true);
     clearTabs();
-    
+
     // Initialize tabs and get their IDs
     const initialTabs = initializeTabs(tabCount);
-    
+
     try {
       // Generate documents sequentially
       for (let i = 0; i < tabCount; i++) {
-        const result = await generateDocument(i, tabCount, false);
-        
+        const result = await generateSinglePrompt(
+          processedData,
+          (progressData) => handleProgress(progressData, i, tabCount, false)
+        );
+
         if (result) {
           const targetTabId = initialTabs[i]?.id;
           if (targetTabId) {
@@ -138,62 +142,63 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
           }
         }
       }
-      
-      // Complete - don't set timeout here as handleProgress will handle it
+
+      // Complete
       setProgressData({
         progress: 100,
         status: `成功生成 ${tabCount} 个版本的提示词文档`,
         step: '完成'
       });
-      
+
     } catch (err) {
       console.error('Batch generation failed:', err);
-      // Mark all loading tabs as failed using the initial tabs reference
+      // Mark all loading tabs as failed
       initialTabs.forEach(tab => {
         updateTab(tab.id, { isLoading: false });
       });
       // Hide progress on error
       setShowProgress(false);
     }
-  }, [validateForm, formData.tab_count, clearTabs, initializeTabs, generateDocument, updateTab]);
-
-  // Form submit handler
-  const handleSubmit = useCallback(async (data: PromptRequest) => {
-    // Update form data with validated data from React Hook Form
-    Object.entries(data).forEach(([key, value]) => {
-      setFieldValue(key as keyof PromptRequest, value);
-    });
-    await handleBatchGeneration();
-  }, [handleBatchGeneration, setFieldValue]);
+  }, [clearTabs, initializeTabs, generateSinglePrompt, handleProgress, updateTab, showVariantAndReferenceFields]);
 
   // Tab regeneration handler
   const handleRegenerateTab = useCallback(async (tabId: string) => {
     setShowProgress(true);
     updateTab(tabId, { isLoading: true });
-    
+
     try {
-      const result = await generateDocument(0, 1, true);
-      
+      // 使用最后提交的数据进行重新生成
+      if (!lastSubmittedData) {
+        console.error('No form data available for regeneration');
+        return;
+      }
+      const processedFormData = lastSubmittedData;
+
+      const result = await generateSinglePrompt(
+        processedFormData,
+        (progressData) => handleProgress(progressData, 0, 1, true)
+      );
+
       if (result) {
         updateTab(tabId, {
           response: result,
           isLoading: false
         });
       }
-      
+
       setProgressData({
         progress: 100,
         status: '重新生成完成！',
         step: '完成'
       });
-      
+
     } catch (err) {
       console.error('Tab regeneration failed:', err);
       updateTab(tabId, { isLoading: false });
       // Hide progress on error
       setShowProgress(false);
     }
-  }, [generateDocument, updateTab]);
+  }, [lastSubmittedData, generateSinglePrompt, handleProgress, updateTab]);
 
   // AI Agent action handlers
   const handleOpenClaudePage = useCallback(async () => {
@@ -247,7 +252,6 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
 
   // Deferred values for better performance
   const deferredTabs = useDeferredValue(tabs);
-  const deferredFormData = useDeferredValue(formData);
 
   // Memoized values
   const hasSelectedPrompt = useMemo(() => selectedTabIds.length > 0, [selectedTabIds]);
@@ -265,7 +269,7 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
 
         {/* Input Form */}
         <PromptForm
-          formData={deferredFormData}
+          formData={defaultFormData}
           isLoading={isLoading}
           error={error}
           onThemeSelect={handleThemeSelect}
@@ -273,16 +277,18 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
           onTabCountChange={handleTabCountChange}
         />
 
-        {/* AI Agent Actions - 条件渲染 */}
+        {/* AI Agent Actions - 条件渲染与懒加载 */}
         {hasValidTabs && showAIAgentActions && (
-          <AIAgentActions
-            onOpenClaudePage={handleOpenClaudePage}
-            onGetRepository={handleGetRepository}
-            onGetTasks={handleGetTasks}
-            onExecuteTasks={handleExecuteTasks}
-            hasSelectedPrompt={hasSelectedPrompt}
-            isLoading={isLoading}
-          />
+          <React.Suspense fallback={<div className="animate-pulse bg-gray-200 rounded-lg h-20"></div>}>
+            <AIAgentActions
+              onOpenClaudePage={handleOpenClaudePage}
+              onGetRepository={handleGetRepository}
+              onGetTasks={handleGetTasks}
+              onExecuteTasks={handleExecuteTasks}
+              hasSelectedPrompt={hasSelectedPrompt}
+              isLoading={isLoading}
+            />
+          </React.Suspense>
         )}
 
         {/* Tab Results */}

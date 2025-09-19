@@ -4,10 +4,74 @@ import React, { memo, useState, useCallback } from 'react';
 import type { PromptResponse } from '@/types';
 import Button from './ui/Button';
 import { FixedContentAppender } from './FixedContentAppender';
-import { extractFunctionModules } from '@/utils';
 
 interface ContentViewerProps {
   response: PromptResponse;
+}
+
+// Moved from utils/index.ts since it's only used here
+function extractFunctionModules(functionOutput: string): string {
+  if (!functionOutput) return '';
+
+  // Remove example content
+  let content = functionOutput.replace(/\*\*示例展示[：:]\*\*[\s\S]*?(?=\n\n|$)/g, '');
+
+  // Remove end markers
+  const endMarkers = ['UI要求：', 'UI 要求：', '权限说明：', '数据采集逻辑：', '任务执行完'];
+
+  for (const marker of endMarkers) {
+    const markerIndex = content.indexOf(marker);
+    if (markerIndex !== -1) {
+      content = content.substring(0, markerIndex).trim();
+      break;
+    }
+  }
+
+  const lines = content.split('\n');
+  const moduleStartIndexes: number[] = [];
+
+  // Find module titles
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]?.trim() || '';
+    const modulePatterns = [
+      /###\s*🔹?\s*模块\s*\d+/i,
+      /🔹\s*模块\s*\d+/i,
+      /模块\s*\d+[：:]/i,
+      /模块\s*\d+\s*[（(]/i
+    ];
+
+    const isModuleTitle = modulePatterns.some(pattern => pattern.test(line));
+
+    if (isModuleTitle) {
+      moduleStartIndexes.push(i);
+    }
+  }
+
+  if (moduleStartIndexes.length === 0) {
+    return content.trim();
+  }
+
+  const modules: string[] = [];
+
+  for (let i = 0; i < moduleStartIndexes.length; i++) {
+    const startLineIndex = moduleStartIndexes[i];
+    const endLineIndex = i < moduleStartIndexes.length - 1 ? moduleStartIndexes[i + 1] : lines.length;
+
+    const moduleLines = lines.slice(startLineIndex, endLineIndex);
+
+    const filteredLines = moduleLines.filter(line => {
+      const trimmed = (line || '').trim();
+      return trimmed !== '' && trimmed !== '---' && trimmed !== '###' && trimmed !== '======';
+    });
+
+    const moduleContent = filteredLines.join('\n').trim();
+
+    if (moduleContent && moduleContent.length > 10) {
+      modules.push(moduleContent);
+    }
+  }
+
+  return modules.length > 0 ? modules.join('\n\n---\n\n') : content.trim();
 }
 
 const ContentViewer: React.FC<ContentViewerProps> = memo(({ response }) => {
@@ -50,7 +114,7 @@ const ContentViewer: React.FC<ContentViewerProps> = memo(({ response }) => {
         <div className="space-y-8 animate-fade-in">
           <div className="glass-tertiary border border-green-400/30 rounded-2xl p-6">
             <h4 className="text-green-400 font-bold mb-3 flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse-glow"></div>
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse-gentle"></div>
               <span>📋 最终版本 - 完整解析内容</span>
             </h4>
             <p className="text-glass-secondary text-sm leading-relaxed">以下是包含所有字段的完整提示词文档</p>
@@ -111,7 +175,7 @@ const ContentViewer: React.FC<ContentViewerProps> = memo(({ response }) => {
           {/* Theme Type */}
           <div className="glass-tertiary border border-blue-400/30 rounded-2xl p-6">
             <h4 className="text-blue-400 font-bold mb-3 flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse-glow"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse-gentle"></div>
               <span>检测到的主题类型</span>
             </h4>
             <div className="flex items-center space-x-3">
@@ -141,7 +205,7 @@ const ContentViewer: React.FC<ContentViewerProps> = memo(({ response }) => {
         <div className="space-y-6 animate-fade-in">
           <div className="glass-tertiary border border-blue-400/30 rounded-2xl p-6">
             <h4 className="text-blue-400 font-bold mb-3 flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse-glow"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse-gentle"></div>
               <span>🔍 功能模块预览</span>
             </h4>
             <p className="text-glass-secondary text-sm leading-relaxed">仅显示核心功能模块，点击&quot;最终版本&quot;查看完整内容</p>
@@ -179,7 +243,7 @@ const ContentViewer: React.FC<ContentViewerProps> = memo(({ response }) => {
         <div className="space-y-6 animate-fade-in">
           <div className="glass-tertiary border border-green-400/30 rounded-2xl p-6">
             <h4 className="text-green-400 font-bold mb-3 flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse-glow"></div>
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse-gentle"></div>
               <span>📱 功能输出</span>
             </h4>
             <p className="text-glass-secondary text-sm leading-relaxed">显示核心功能模块内容</p>
