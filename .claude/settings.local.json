@@ -57,7 +57,9 @@
       "Bash(timeout 10 npm run dev)",
       "Bash(find:*)",
       "Bash(for:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(tree:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "additionalDirectories": [

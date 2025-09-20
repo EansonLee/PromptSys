@@ -19,8 +19,7 @@ interface PromptGeneratorProps {
 
 const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className = '' }) => {
   // 从环境变量读取配置（memoized）
-  const showAIAgentActions = useMemo(() =>
-    process.env.NEXT_PUBLIC_SHOW_AI_AGENT_ACTIONS === 'true', []);
+  const showAIAgentActions = true;
   
   const { isLoading, error, clearError, generateSinglePrompt, callAgentAction } = useAPI();
   const {
@@ -35,19 +34,16 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
   } = useTabs();
 
   // 简化的状态管理 - PromptForm组件现在完全使用react-hook-form
-  // 检查是否隐藏变体和参考文件字段（memoized）
-  const showVariantAndReferenceFields = useMemo(() =>
-    process.env.NEXT_PUBLIC_SHOW_VARIANT_AND_REFERENCE_FIELDS === 'true', []);
 
   // 只保留默认值常量，不需要状态管理
   const defaultFormData = React.useMemo(() => ({
     app_name: '',
     theme: '',
-    variant_folder: showVariantAndReferenceFields ? '' : 'variant_default',
+    variant_folder: '',
     ui_color: '',
-    reference_file: showVariantAndReferenceFields ? '' : 'MainActivity',
+    reference_file: '',
     tab_count: 3
-  }), [showVariantAndReferenceFields]);
+  }), []);
 
   // 存储最后提交的表单数据，用于重新生成
   const [lastSubmittedData, setLastSubmittedData] = React.useState<PromptRequest | null>(null);
@@ -108,8 +104,8 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
     // 确保隐藏字段有默认值
     const processedData: PromptRequest = {
       ...data,
-      variant_folder: showVariantAndReferenceFields ? data.variant_folder : 'variant_default',
-      reference_file: showVariantAndReferenceFields ? data.reference_file : 'MainActivity'
+      variant_folder: data.variant_folder || 'variant_default',
+      reference_file: data.reference_file || 'MainActivity'
     };
 
     // 保存最后提交的数据用于重新生成
@@ -159,7 +155,7 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
       // Hide progress on error
       setShowProgress(false);
     }
-  }, [clearTabs, initializeTabs, generateSinglePrompt, handleProgress, updateTab, showVariantAndReferenceFields]);
+  }, [clearTabs, initializeTabs, generateSinglePrompt, handleProgress, updateTab]);
 
   // Tab regeneration handler
   const handleRegenerateTab = useCallback(async (tabId: string) => {

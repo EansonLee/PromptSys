@@ -6,11 +6,8 @@ export interface UseTabsReturn {
   activeTabId: string | null;
   selectedTabIds: readonly string[];
   setActiveTab: (id: string) => void;
-  selectTab: (id: string, selected: boolean) => void;
   selectSingleTab: (id: string) => void;
-  addTab: (tab: TabDocument) => void;
   updateTab: (id: string, updates: Partial<Omit<TabDocument, 'id'>>) => void;
-  removeTab: (id: string) => void;
   clearTabs: () => void;
   initializeTabs: (count: number) => TabDocument[];
 }
@@ -24,26 +21,9 @@ export function useTabs(): UseTabsReturn {
     setActiveTabId(id);
   }, []);
 
-  const selectTab = useCallback((id: string, selected: boolean) => {
-    setSelectedTabIds(prev => {
-      if (selected) {
-        return [...prev, id];
-      } else {
-        return prev.filter(tabId => tabId !== id);
-      }
-    });
-  }, []);
-
   const selectSingleTab = useCallback((id: string) => {
     setSelectedTabIds([id]);
   }, []);
-
-  const addTab = useCallback((tab: TabDocument) => {
-    setTabs(prev => [...prev, tab]);
-    if (activeTabId === null) {
-      setActiveTabId(tab.id);
-    }
-  }, [activeTabId]);
 
   const updateTab = useCallback((id: string, updates: Partial<Omit<TabDocument, 'id'>>) => {
     setTabs(prev => prev.map(tab => 
@@ -51,21 +31,6 @@ export function useTabs(): UseTabsReturn {
     ));
   }, []);
 
-  const removeTab = useCallback((id: string) => {
-    setTabs(prev => {
-      const newTabs = prev.filter(tab => tab.id !== id);
-      // If removing the active tab, set a new active tab
-      if (id === activeTabId && newTabs.length > 0) {
-        setActiveTabId(newTabs[0]?.id || null);
-      } else if (newTabs.length === 0) {
-        setActiveTabId(null);
-      }
-      return newTabs;
-    });
-    
-    // Remove from selected tabs
-    setSelectedTabIds(prev => prev.filter(tabId => tabId !== id));
-  }, [activeTabId]);
 
   const clearTabs = useCallback(() => {
     setTabs([]);
@@ -93,11 +58,8 @@ export function useTabs(): UseTabsReturn {
     activeTabId,
     selectedTabIds,
     setActiveTab,
-    selectTab,
     selectSingleTab,
-    addTab,
     updateTab,
-    removeTab,
     clearTabs,
     initializeTabs
   };

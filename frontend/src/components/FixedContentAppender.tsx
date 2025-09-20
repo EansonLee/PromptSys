@@ -14,7 +14,7 @@ export const FixedContentAppender: React.FC<Props> = ({ baseContent }) => {
   const [customFixedContent, setCustomFixedContent] = useState<string>(baseContent.fixed_content || '')
   
   // 从环境变量读取配置
-  const showGenerateTemplateButton = process.env.NEXT_PUBLIC_SHOW_GENERATE_TEMPLATE_BUTTON === 'true'
+  const showGenerateTemplateButton = true
 
   // 当baseContent变化时更新固定内容
   useEffect(() => {

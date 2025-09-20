@@ -78,7 +78,7 @@ const ContentViewer: React.FC<ContentViewerProps> = memo(({ response }) => {
   const [showFullContent, setShowFullContent] = useState(false);
   
   // 从环境变量读取配置
-  const showFinalVersionButton = process.env.NEXT_PUBLIC_SHOW_FINAL_VERSION_BUTTON === 'true';
+  const showFinalVersionButton = true;
 
   const toggleFullContent = useCallback(() => {
     setShowFullContent(prev => !prev);
