@@ -2,7 +2,7 @@
 
 import React, { memo, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import type { PromptRequest, ThemeOption } from '@/types';
+import type { PromptRequest, ThemeOption, PromptType } from '@/types';
 import { validationRules } from '@/utils/formValidation';
 import FormFieldSimple from './ui/FormFieldSimple';
 import ColorInput from './ui/ColorInput';
@@ -58,6 +58,9 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
     register('ui_color', validationRules.ui_color);
   }, [register]);
 
+  // Watch prompt_type to dynamically adjust field labels
+  const promptType = watch('prompt_type') as PromptType || 'android';
+
   const handleFormSubmit = handleSubmit((data: PromptRequest) => {
     onSubmit(data);
   });
@@ -83,6 +86,54 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
             error={errors.app_name}
           />
 
+          {/* Prompt Type Selector */}
+          <div className="relative group">
+            <label className="block text-sm font-semibold text-glass-primary mb-3">
+              生成类型
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="relative cursor-pointer">
+                <input
+                  type="radio"
+                  value="android"
+                  {...register('prompt_type')}
+                  className="peer sr-only"
+                />
+                <div className="p-4 rounded-xl glass-input-enhanced border-2 border-transparent peer-checked:border-blue-400 peer-checked:bg-blue-50/30 transition-all duration-300">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                      📱
+                    </div>
+                    <div>
+                      <div className="font-semibold text-glass-primary">Android 端</div>
+                      <div className="text-sm text-glass-muted">生成 Android Fragment 设计</div>
+                    </div>
+                  </div>
+                </div>
+              </label>
+
+              <label className="relative cursor-pointer">
+                <input
+                  type="radio"
+                  value="frontend"
+                  {...register('prompt_type')}
+                  className="peer sr-only"
+                />
+                <div className="p-4 rounded-xl glass-input-enhanced border-2 border-transparent peer-checked:border-purple-400 peer-checked:bg-purple-50/30 transition-all duration-300">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                      💻
+                    </div>
+                    <div>
+                      <div className="font-semibold text-glass-primary">前端</div>
+                      <div className="text-sm text-glass-muted">生成 React 组件设计</div>
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
           {/* Theme */}
           <div className="space-y-4">
             <FormFieldSimple
@@ -104,11 +155,17 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
 
           {/* Variant Folder */}
           <FormFieldSimple
-            label="变体文件夹"
+            label={promptType === 'frontend' ? '组件目录' : '变体文件夹'}
             name="variant_folder"
-            placeholder="例如：variant_traffic137630"
+            placeholder={promptType === 'frontend'
+              ? '例如：components_traffic137630'
+              : '例如：variant_traffic137630'
+            }
             required
-            helpText="只能包含字母、数字和下划线"
+            helpText={promptType === 'frontend'
+              ? '只能包含字母、数字和下划线，用于组件文件夹命名'
+              : '只能包含字母、数字和下划线'
+            }
             registration={register('variant_folder', validationRules.variant_folder)}
             error={errors.variant_folder}
           />
@@ -126,10 +183,16 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
 
           {/* Reference File */}
           <FormFieldSimple
-            label="参考文件"
+            label={promptType === 'frontend' ? '参考组件' : '参考文件'}
             name="reference_file"
-            placeholder="例如：HomeFragment（自动添加@前缀和.kt后缀）"
-            helpText="输入文件名（如 HomeFragment），系统会自动格式化为 @HomeFragment.kt"
+            placeholder={promptType === 'frontend'
+              ? '例如：TrafficCard（自动添加@前缀和.tsx后缀）'
+              : '例如：HomeFragment（自动添加@前缀和.kt后缀）'
+            }
+            helpText={promptType === 'frontend'
+              ? '输入组件名（如 TrafficCard），系统会自动格式化为 @TrafficCard.tsx'
+              : '输入文件名（如 HomeFragment），系统会自动格式化为 @HomeFragment.kt'
+            }
             registration={register('reference_file', validationRules.reference_file)}
             error={errors.reference_file}
           />
@@ -162,7 +225,7 @@ const PromptForm: React.FC<PromptFormProps> = memo(({
             disabled={!isValid || isLoading}
             className="w-full"
           >
-            {isLoading ? '生成中...' : '生成提示词'}
+            {isLoading ? '生成中...' : `生成${promptType === 'frontend' ? '前端' : 'Android'}端提示词`}
           </Button>
 
           {/* Error Display */}

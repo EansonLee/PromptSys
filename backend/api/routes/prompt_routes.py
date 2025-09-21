@@ -57,7 +57,8 @@ async def generate_prompt_stream(
             app_name=request.app_name,
             variant_folder=request.variant_folder,
             ui_color=request.ui_color,
-            reference_file=request.reference_file
+            reference_file=request.reference_file,
+            prompt_type=request.prompt_type
         )
         logger.info(f"GPT 生成完成，输出长度: {len(gpt_output)} 字符")
         
@@ -108,7 +109,7 @@ async def generate_prompt(
     prompt_generator: PromptGenerator = Depends(get_prompt_generator)
 ):
     """保持原有的同步API接口，用于向后兼容"""
-    logger.info(f"收到提示词生成请求 - APP: {request.app_name}, 主题: {request.theme[:50]}...")
+    logger.info(f"收到{request.prompt_type}提示词生成请求 - APP: {request.app_name}, 主题: {request.theme[:50]}...")
     
     try:
         # 调用 GPT 生成内容
@@ -118,7 +119,8 @@ async def generate_prompt(
             app_name=request.app_name,
             variant_folder=request.variant_folder,
             ui_color=request.ui_color,
-            reference_file=request.reference_file
+            reference_file=request.reference_file,
+            prompt_type=request.prompt_type
         )
         logger.info(f"GPT 生成完成，输出长度: {len(gpt_output)} 字符")
         
@@ -159,7 +161,7 @@ async def generate_prompt_stream_endpoint(
     prompt_generator: PromptGenerator = Depends(get_prompt_generator)
 ):
     """新的流式API接口，提供实时进度更新"""
-    logger.info(f"收到流式提示词生成请求 - APP: {request.app_name}, 主题: {request.theme[:50]}...")
+    logger.info(f"收到流式{request.prompt_type}提示词生成请求 - APP: {request.app_name}, 主题: {request.theme[:50]}...")
     
     return StreamingResponse(
         generate_prompt_stream(request, prompt_generator),

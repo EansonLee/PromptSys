@@ -55,26 +55,28 @@ class PromptGenerator:
                         f"ResponseParser={type(self.response_parser).__name__}, "
                         f"TemplateBuilder={type(self.template_builder).__name__}")
     
-    async def generate(self, theme: str, app_name: str, variant_folder: str, 
-                      ui_color: str = "蓝色科技感", reference_file: str = "") -> str:
+    async def generate(self, theme: str, app_name: str, variant_folder: str,
+                      ui_color: str = "蓝色科技感", reference_file: str = "",
+                      prompt_type: str = "android") -> str:
         """
         Generate prompt content using LLM.
-        
+
         This method maintains backward compatibility with the original interface
         while using the new modular architecture internally.
-        
+
         Args:
             theme: Theme description
             app_name: Application name
             variant_folder: Variant folder name
             ui_color: UI color theme
             reference_file: Reference file name
-            
+            prompt_type: Type of prompt ("android" or "frontend")
+
         Returns:
             Generated prompt content from LLM
         """
-        self.logger.info(f"Starting prompt generation - theme: {theme[:30]}..., app: {app_name}")
-        
+        self.logger.info(f"Starting {prompt_type} prompt generation - theme: {theme[:30]}..., app: {app_name}")
+
         try:
             # Create prompt context
             context = self.template_builder.create_context(
@@ -84,10 +86,10 @@ class PromptGenerator:
                 ui_color=ui_color,
                 reference_file=reference_file
             )
-            
-            # Build prompts
-            system_prompt = self.template_builder.build_system_prompt()
-            user_prompt = self.template_builder.build_user_prompt(context)
+
+            # Build prompts based on prompt type
+            system_prompt = self.template_builder.build_system_prompt(prompt_type)
+            user_prompt = self.template_builder.build_user_prompt(context, prompt_type)
             
             # Create message list
             messages = [

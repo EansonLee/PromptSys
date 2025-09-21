@@ -28,6 +28,7 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
     selectedTabIds,
     setActiveTab,
     selectSingleTab,
+    setActiveAndSelectTab,
     updateTab,
     clearTabs,
     initializeTabs
@@ -42,7 +43,8 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
     variant_folder: '',
     ui_color: '',
     reference_file: '',
-    tab_count: 3
+    tab_count: 3,
+    prompt_type: 'android' as const
   }), []);
 
   // 存储最后提交的表单数据，用于重新生成
@@ -105,7 +107,8 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
     const processedData: PromptRequest = {
       ...data,
       variant_folder: data.variant_folder || 'variant_default',
-      reference_file: data.reference_file || 'MainActivity'
+      reference_file: data.reference_file || 'MainActivity',
+      prompt_type: data.prompt_type || 'android'
     };
 
     // 保存最后提交的数据用于重新生成
@@ -135,14 +138,25 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
               response: result,
               isLoading: false
             });
+
+            // Auto-select the first completed tab if no tab is currently selected
+            if (i === 0 && selectedTabIds.length === 0) {
+              selectSingleTab(targetTabId);
+            }
           }
         }
       }
 
-      // Complete
+      // Complete - Auto-select the first tab
+      const firstTabId = initialTabs[0]?.id;
+      if (firstTabId) {
+        selectSingleTab(firstTabId);
+      }
+
+      const promptTypeText = processedData.prompt_type === 'frontend' ? '前端' : 'Android端';
       setProgressData({
         progress: 100,
-        status: `成功生成 ${tabCount} 个版本的提示词文档`,
+        status: `成功生成 ${tabCount} 个版本的${promptTypeText}提示词文档`,
         step: '完成'
       });
 
@@ -182,9 +196,10 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
         });
       }
 
+      const promptTypeText = processedFormData.prompt_type === 'frontend' ? '前端' : 'Android端';
       setProgressData({
         progress: 100,
-        status: '重新生成完成！',
+        status: `${promptTypeText}提示词重新生成完成！`,
         step: '完成'
       });
 
@@ -295,6 +310,7 @@ const PromptGeneratorRefactored: React.FC<PromptGeneratorProps> = ({ className =
             selectedTabIds={selectedTabIds}
             onTabSelect={setActiveTab}
             onTabPromptSelect={selectSingleTab}
+            onActiveAndSelectTab={setActiveAndSelectTab}
             onRegenerateTab={handleRegenerateTab}
           >
             {(tab) => <ContentViewer response={tab.response} />}

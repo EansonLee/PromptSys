@@ -6,6 +6,7 @@ export interface PromptRequest {
   readonly ui_color: string;
   readonly reference_file?: string;
   readonly tab_count?: number;
+  readonly prompt_type?: 'android' | 'frontend';
 }
 
 export interface PromptResponse {
@@ -65,6 +66,15 @@ export interface TabDocument {
 export interface ThemeOption {
   readonly id: string;
   readonly name: string;
+  readonly description: string;
+  readonly icon: string;
+}
+
+export type PromptType = 'android' | 'frontend';
+
+export interface PromptTypeOption {
+  readonly value: PromptType;
+  readonly label: string;
   readonly description: string;
   readonly icon: string;
 }

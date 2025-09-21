@@ -13,6 +13,7 @@ class PromptRequest(BaseModel):
     ui_color: str = "蓝色科技感"
     reference_file: str = ""
     tab_count: int = 3
+    prompt_type: str = "android"  # "android" | "frontend"
 
 
 class RepositoryRequest(BaseModel):

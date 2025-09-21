@@ -10,6 +10,7 @@ interface TabContainerProps {
   selectedTabIds: readonly string[];
   onTabSelect: (id: string) => void;
   onTabPromptSelect: (id: string) => void;
+  onActiveAndSelectTab?: (id: string) => void;  // New unified function
   onRegenerateTab: (id: string) => void;
   children: (tab: TabDocument) => React.ReactNode;
 }
@@ -36,6 +37,7 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
   selectedTabIds,
   onTabSelect,
   onTabPromptSelect,
+  onActiveAndSelectTab,
   onRegenerateTab,
   children
 }) => {
@@ -64,9 +66,13 @@ const TabContainer: React.FC<TabContainerProps> = memo(({
             <button
               key={tab.id}
               onClick={() => {
-                onTabSelect(tab.id);
-                // Also select this tab when clicking on it
-                handlePromptSelection(tab.id);
+                // Use unified function if available, otherwise fallback to separate calls
+                if (onActiveAndSelectTab) {
+                  onActiveAndSelectTab(tab.id);
+                } else {
+                  onTabSelect(tab.id);
+                  handlePromptSelection(tab.id);
+                }
               }}
               className={`
                 flex-shrink-0 px-6 py-4 text-sm font-medium transition-all duration-300 relative group

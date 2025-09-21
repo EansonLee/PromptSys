@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import type { TabDocument } from '@/types';
 
 export interface UseTabsReturn {
@@ -7,6 +8,7 @@ export interface UseTabsReturn {
   selectedTabIds: readonly string[];
   setActiveTab: (id: string) => void;
   selectSingleTab: (id: string) => void;
+  setActiveAndSelectTab: (id: string) => void;
   updateTab: (id: string, updates: Partial<Omit<TabDocument, 'id'>>) => void;
   clearTabs: () => void;
   initializeTabs: (count: number) => TabDocument[];
@@ -23,6 +25,14 @@ export function useTabs(): UseTabsReturn {
 
   const selectSingleTab = useCallback((id: string) => {
     setSelectedTabIds([id]);
+  }, []);
+
+  const setActiveAndSelectTab = useCallback((id: string) => {
+    // Use flushSync to ensure synchronous updates for better tab switching
+    flushSync(() => {
+      setActiveTabId(id);
+      setSelectedTabIds([id]);
+    });
   }, []);
 
   const updateTab = useCallback((id: string, updates: Partial<Omit<TabDocument, 'id'>>) => {
@@ -45,11 +55,11 @@ export function useTabs(): UseTabsReturn {
       response: {} as any, // Will be populated later
       isLoading: true
     }));
-    
+
     setTabs(initialTabs);
     setActiveTabId(initialTabs[0]?.id || null);
-    setSelectedTabIds([]);
-    
+    setSelectedTabIds([]); // Start with no selection, will auto-select first tab when ready
+
     return initialTabs; // Return the created tabs for immediate use
   }, []);
 
@@ -59,6 +69,7 @@ export function useTabs(): UseTabsReturn {
     selectedTabIds,
     setActiveTab,
     selectSingleTab,
+    setActiveAndSelectTab,
     updateTab,
     clearTabs,
     initializeTabs
